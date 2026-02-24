@@ -195,6 +195,7 @@ function addEntry() {
   const day = document.getElementById("entryDay").value;
   const startTime = getTimeValue("start");
   const endTime = getTimeValue("end");
+  const type = document.getElementById("entryType").value;
   const desc = document.getElementById("entryDesc").value.trim();
   const location = document.getElementById("entryLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
@@ -212,6 +213,7 @@ function addEntry() {
     day: day,
     startTime: startTime,
     endTime: endTime,
+    type: type,
     description: desc,
     location: location,
     claimedBy: "",
@@ -336,6 +338,7 @@ function renderTable() {
       <td>${dateFormatted}</td>
       <td>${entry.day}</td>
       <td style="white-space:nowrap;">${timeSlot}</td>
+      <td>${entry.type || ""}</td>
       <td>${entry.description || ""}</td>
       <td>${entry.location}</td>
       <td>${claimCell}</td>

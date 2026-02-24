@@ -70,6 +70,14 @@
             <label>Hours</label>
             <div class="hours-display" id="hoursDisplay">0</div>
           </div>
+          <!-- Type -->
+          <div class="form-group">
+            <label>Type</label>
+            <select id="entryType">
+              <option value="Com Hab">Com Hab</option>
+              <option value="Respite">Respite</option>
+            </select>
+          </div>
           <!-- Description -->
           <div class="form-group">
             <label>Description</label>
@@ -104,6 +112,7 @@
               <th>Date</th>
               <th>Day</th>
               <th>Time Slot</th>
+              <th>Type</th>
               <th>Description</th>
               <th>Location</th>
               <th>Claimed By</th>
@@ -113,7 +122,7 @@
             </tr>
           </thead>
           <tbody id="scheduleBody">
-            <tr><td colspan="9" class="empty-state"><p>Loading schedule...</p></td></tr>
+            <tr><td colspan="10" class="empty-state"><p>Loading schedule...</p></td></tr>
           </tbody>
         </table>
       </div>

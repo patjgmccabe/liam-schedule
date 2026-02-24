@@ -78,20 +78,21 @@ function formatWeekRange(monday) {
 
 /* ===== Render Summary ===== */
 function renderSummary() {
-  const entries = Object.values(allEntries);
+  const entriesWithIds = Object.entries(allEntries);
 
   // Only include entries that have been claimed
-  const claimed = entries.filter(e => e.claimedBy && e.claimedBy.trim() !== "");
+  const claimed = entriesWithIds.filter(([id, e]) => e.claimedBy && e.claimedBy.trim() !== "");
 
-  // Group by week (Monday date)
+  // Group by week (Monday date), tracking entry IDs per week
   const weeks = {};
-  claimed.forEach(entry => {
+  claimed.forEach(([id, entry]) => {
     const monday = getWeekMonday(entry.date);
     const key = monday.toISOString().slice(0, 10);
     if (!weeks[key]) {
-      weeks[key] = { monday: monday, participants: {} };
+      weeks[key] = { monday: monday, participants: {}, entryIds: [] };
       PARTICIPANTS.forEach(p => weeks[key].participants[p] = 0);
     }
+    weeks[key].entryIds.push(id);
     if (PARTICIPANTS.includes(entry.claimedBy)) {
       weeks[key].participants[entry.claimedBy] += entry.hours;
     }
@@ -108,10 +109,11 @@ function renderSummary() {
   let html = "";
 
   if (sortedWeeks.length === 0) {
-    html = '<tr><td colspan="7" class="empty-state"><p>No claimed hours yet.</p></td></tr>';
+    html = '<tr><td colspan="8" class="empty-state"><p>No claimed hours yet.</p></td></tr>';
   } else {
     sortedWeeks.forEach(([key, week]) => {
       let weekTotal = 0;
+      const idsJson = JSON.stringify(week.entryIds).replace(/"/g, '&quot;');
       html += "<tr>";
       html += `<td style="white-space:nowrap; font-weight:600;">${formatWeekRange(week.monday)}</td>`;
       PARTICIPANTS.forEach(p => {
@@ -121,6 +123,7 @@ function renderSummary() {
         html += `<td>${hrs > 0 ? hrs : "-"}</td>`;
       });
       html += `<td class="week-total">${Math.round(weekTotal * 100) / 100}</td>`;
+      html += `<td><button class="btn btn-danger" onclick="deleteWeek('${key}', '${formatWeekRange(week.monday)}')">X</button></td>`;
       html += "</tr>";
     });
 
@@ -134,6 +137,7 @@ function renderSummary() {
       html += `<td>${t > 0 ? t : "-"}</td>`;
     });
     html += `<td>${Math.round(grandTotal * 100) / 100}</td>`;
+    html += "<td></td>";
     html += "</tr>";
   }
 
@@ -162,4 +166,31 @@ function renderTotalCards(totals) {
     </div>`;
   });
   grid.innerHTML = html;
+}
+
+/* ===== Delete Week ===== */
+function deleteWeek(weekKey, weekLabel) {
+  // Find all entry IDs for this week
+  const ids = [];
+  Object.entries(allEntries).forEach(([id, entry]) => {
+    if (entry.claimedBy && entry.claimedBy.trim() !== "") {
+      const monday = getWeekMonday(entry.date);
+      const key = monday.toISOString().slice(0, 10);
+      if (key === weekKey) ids.push(id);
+    }
+  });
+
+  if (!confirm("Are you sure you want to delete all " + ids.length + " claimed entries for the week of " + weekLabel + "? This cannot be undone.")) {
+    return;
+  }
+
+  if (firebaseReady) {
+    const updates = {};
+    ids.forEach(id => updates[id] = null);
+    entriesRef.update(updates);
+  } else {
+    ids.forEach(id => delete allEntries[id]);
+    localStorage.setItem("liamScheduleEntries", JSON.stringify(allEntries));
+    renderSummary();
+  }
 }

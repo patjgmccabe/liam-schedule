@@ -76,12 +76,26 @@ function formatWeekRange(monday) {
   return formatDateShort(monday) + " - " + formatDateShort(sunday) + " (" + monday.getFullYear() + ")";
 }
 
+/* ===== Check if entry end time has passed ===== */
+function entryHasPassed(entry) {
+  const parts = entry.endTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!parts) return false;
+  let h = parseInt(parts[1]);
+  const m = parseInt(parts[2]);
+  const ampm = parts[3].toUpperCase();
+  if (ampm === "PM" && h !== 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  const entryEnd = new Date(entry.date + "T00:00:00");
+  entryEnd.setHours(h, m, 0, 0);
+  return entryEnd < new Date();
+}
+
 /* ===== Render Summary ===== */
 function renderSummary() {
   const entriesWithIds = Object.entries(allEntries);
 
-  // Only include entries that have been claimed
-  const claimed = entriesWithIds.filter(([id, e]) => e.claimedBy && e.claimedBy.trim() !== "");
+  // Only include entries that are claimed AND whose date/time has passed
+  const claimed = entriesWithIds.filter(([id, e]) => e.claimedBy && e.claimedBy.trim() !== "" && entryHasPassed(e));
 
   // Group by week (Monday date), tracking entry IDs per week
   const weeks = {};
@@ -109,7 +123,7 @@ function renderSummary() {
   let html = "";
 
   if (sortedWeeks.length === 0) {
-    html = '<tr><td colspan="8" class="empty-state"><p>No claimed hours yet.</p></td></tr>';
+    html = '<tr><td colspan="8" class="empty-state"><p>No hours worked yet.</p></td></tr>';
   } else {
     sortedWeeks.forEach(([key, week]) => {
       let weekTotal = 0;

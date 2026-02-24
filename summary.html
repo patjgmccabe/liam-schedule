@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Summary - Liam's Schedule</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div class="navbar">
+    <h1>Liam's Schedule</h1>
+    <nav>
+      <a href="index.html">Schedule</a>
+      <a href="summary.html" class="active">Weekly Summary</a>
+    </nav>
+  </div>
+
+  <div class="container">
+
+    <!-- Setup Banner -->
+    <div class="setup-banner" id="setupBanner" style="display:none;">
+      <h3>Firebase Setup Required</h3>
+      <p>To enable multi-user access, configure Firebase in <code>app.js</code>. See the README for step-by-step instructions.</p>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Weekly Hours by Participant</h2>
+      </div>
+      <div class="table-wrapper">
+        <table class="summary-table" id="summaryTable">
+          <thead>
+            <tr>
+              <th>Week</th>
+              <th>Brendan</th>
+              <th>Caleigh</th>
+              <th>Shannon</th>
+              <th>Kelly</th>
+              <th>Aidan</th>
+              <th>Week Total</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody">
+            <tr><td colspan="7" class="empty-state"><p>Loading summary...</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Individual Totals Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Overall Totals</h2>
+      </div>
+      <div id="totalsGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:1rem;">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="summary.js"></script>
+</body>
+</html>

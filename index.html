@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liam's Schedule</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div class="navbar">
+    <h1>Liam's Schedule</h1>
+    <nav>
+      <a href="index.html" class="active">Schedule</a>
+      <a href="summary.html">Weekly Summary</a>
+    </nav>
+  </div>
+
+  <div class="container">
+
+    <!-- Setup Banner (shown when Firebase is not configured) -->
+    <div class="setup-banner" id="setupBanner" style="display:none;">
+      <h3>Firebase Setup Required</h3>
+      <p>To enable multi-user access, configure Firebase in <code>app.js</code>. See the README for step-by-step instructions.</p>
+    </div>
+
+    <!-- Add Entry Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Time Slots</h2>
+        <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()">+ Add New Slot</button>
+      </div>
+
+      <div class="form-section" id="entryForm">
+        <div class="form-grid">
+          <!-- Date -->
+          <div class="form-group">
+            <label>Date</label>
+            <input type="text" id="entryDate" placeholder="Pick a date..." readonly>
+          </div>
+          <!-- Day (auto) -->
+          <div class="form-group">
+            <label>Day</label>
+            <input type="text" id="entryDay" readonly placeholder="Auto-filled">
+          </div>
+          <!-- Start Time -->
+          <div class="form-group">
+            <label>Start Time</label>
+            <div class="time-row">
+              <select id="startHour"></select>
+              <span class="time-sep">:</span>
+              <select id="startMin"></select>
+              <select id="startAmpm"><option>AM</option><option>PM</option></select>
+            </div>
+          </div>
+          <!-- End Time -->
+          <div class="form-group">
+            <label>End Time</label>
+            <div class="time-row">
+              <select id="endHour"></select>
+              <span class="time-sep">:</span>
+              <select id="endMin"></select>
+              <select id="endAmpm"><option>AM</option><option>PM</option></select>
+            </div>
+          </div>
+          <!-- Hours (auto) -->
+          <div class="form-group">
+            <label>Hours</label>
+            <div class="hours-display" id="hoursDisplay">0</div>
+          </div>
+          <!-- Description -->
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="entryDesc" placeholder="e.g. Field T3">
+          </div>
+          <!-- Location -->
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Location</label>
+            <input type="text" id="entryLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
+          </div>
+        </div>
+        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+          <button class="btn btn-primary" onclick="addEntry()">Add Time Slot</button>
+          <button class="btn btn-outline" onclick="toggleForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Table Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Schedule</h2>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button class="toggle-btn" id="showPastBtn" onclick="togglePast()">Show Past Dates</button>
+          <span id="entryCount" style="font-size:0.82rem; color:var(--text-secondary);"></span>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Day</th>
+              <th>Time Slot</th>
+              <th>Description</th>
+              <th>Location</th>
+              <th>Claimed By</th>
+              <th>Status</th>
+              <th>Hours</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="scheduleBody">
+            <tr><td colspan="9" class="empty-state"><p>Loading schedule...</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

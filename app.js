@@ -4,13 +4,13 @@
    See README.md for setup instructions.
    ============================================================= */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDyvJBbVCL-9oST1VG9apdfk_6vUYkxIrs",
+  authDomain: "liam-schedule.firebaseapp.com",
+  databaseURL: "https://liam-schedule-default-rtdb.firebaseio.com",
+  projectId: "liam-schedule",
+  storageBucket: "liam-schedule.firebasestorage.app",
+  messagingSenderId: "300732041208",
+  appId: "1:300732041208:web:70de624e17ca61a7ed380d"
 };
 
 /* ===== Constants ===== */

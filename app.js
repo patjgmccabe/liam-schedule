@@ -16,6 +16,7 @@ const firebaseConfig = {
 /* ===== Constants ===== */
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
 
 /* ===== State ===== */
 let db = null;
@@ -23,6 +24,8 @@ let entriesRef = null;
 let allEntries = {};
 let showPast = false;
 let firebaseReady = false;
+let currentUser = null;
+let isAdmin = false;
 
 /* ===== Seed Data from existing PDF schedule ===== */
 const SEED_DATA = [
@@ -49,14 +52,34 @@ function initFirebase() {
   if (firebaseConfig.apiKey === "YOUR_API_KEY") {
     // Firebase not configured - use localStorage fallback
     document.getElementById("setupBanner").style.display = "block";
+    isAdmin = true; // allow full access in local fallback mode
     loadFromLocalStorage();
     return;
   }
   try {
     firebase.initializeApp(firebaseConfig);
+  } catch (e) {
+    console.error("Firebase init error:", e);
+    document.getElementById("setupBanner").style.display = "block";
+    isAdmin = true;
+    loadFromLocalStorage();
+    return;
+  }
+
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    currentUser = user;
+    isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    updateNavbar();
+    applyAdminUI();
+
+    if (firebaseReady) return; // already set up
+    firebaseReady = true;
     db = firebase.database();
     entriesRef = db.ref("entries");
-    firebaseReady = true;
     // Listen for real-time changes
     entriesRef.on("value", (snapshot) => {
       allEntries = snapshot.val() || {};
@@ -68,11 +91,28 @@ function initFirebase() {
         seedData();
       }
     });
-  } catch (e) {
-    console.error("Firebase init error:", e);
-    document.getElementById("setupBanner").style.display = "block";
-    loadFromLocalStorage();
+  });
+}
+
+function updateNavbar() {
+  const el = document.getElementById("navUser");
+  if (!el || !currentUser) return;
+  const name = currentUser.displayName || currentUser.email;
+  el.innerHTML = `<span class="nav-username">${name}</span>
+    <button class="nav-signout-btn" onclick="signOutUser()">Sign Out</button>`;
+}
+
+function applyAdminUI() {
+  if (!isAdmin) {
+    const addBtn = document.getElementById("toggleFormBtn");
+    if (addBtn) addBtn.style.display = "none";
   }
+}
+
+function signOutUser() {
+  firebase.auth().signOut().then(() => {
+    window.location.href = "login.html";
+  });
 }
 
 function loadFromLocalStorage() {
@@ -333,8 +373,8 @@ function renderTable() {
       </div>`;
     }
 
-    const editBtn = `<button class="btn btn-edit" onclick="editEntry('${id}')" title="Edit">Edit</button>`;
-    const deleteBtn = isPast ? "" : `<button class="btn btn-danger" onclick="deleteEntry('${id}')" title="Delete">X</button>`;
+    const editBtn = isAdmin ? `<button class="btn btn-edit" onclick="editEntry('${id}')" title="Edit">Edit</button>` : "";
+    const deleteBtn = isAdmin && !isPast ? `<button class="btn btn-danger" onclick="deleteEntry('${id}')" title="Delete">X</button>` : "";
 
     html += `<tr class="${isPast ? 'past-date' : ''}">
       <td>${dateFormatted}</td>

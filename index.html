@@ -12,10 +12,13 @@
   <!-- Navigation -->
   <div class="navbar">
     <h1>Liam's Schedule</h1>
-    <nav>
-      <a href="index.html" class="active">Schedule</a>
-      <a href="summary.html">Weekly Summary</a>
-    </nav>
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <nav>
+        <a href="index.html" class="active">Schedule</a>
+        <a href="summary.html">Weekly Summary</a>
+      </nav>
+      <div id="navUser" class="nav-user"></div>
+    </div>
   </div>
 
   <div class="container">
@@ -198,6 +201,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="app.js"></script>
 </body>

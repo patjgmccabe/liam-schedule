@@ -13,11 +13,14 @@ const firebaseConfig = {
 
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b"];
+const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
 
 let db = null;
 let entriesRef = null;
 let firebaseReady = false;
 let allEntries = {};
+let currentUser = null;
+let isAdmin = false;
 
 /* ===== Initialize ===== */
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initFirebase() {
   if (firebaseConfig.apiKey === "YOUR_API_KEY") {
     document.getElementById("setupBanner").style.display = "block";
+    isAdmin = true;
     loadFromLocalStorage();
     return;
   }
@@ -34,18 +38,46 @@ function initFirebase() {
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
+  } catch (e) {
+    console.error("Firebase init error:", e);
+    document.getElementById("setupBanner").style.display = "block";
+    isAdmin = true;
+    loadFromLocalStorage();
+    return;
+  }
+
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    currentUser = user;
+    isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    updateNavbar();
+
+    if (firebaseReady) return;
+    firebaseReady = true;
     db = firebase.database();
     entriesRef = db.ref("entries");
-    firebaseReady = true;
     entriesRef.on("value", (snapshot) => {
       allEntries = snapshot.val() || {};
       renderSummary();
     });
-  } catch (e) {
-    console.error("Firebase init error:", e);
-    document.getElementById("setupBanner").style.display = "block";
-    loadFromLocalStorage();
-  }
+  });
+}
+
+function updateNavbar() {
+  const el = document.getElementById("navUser");
+  if (!el || !currentUser) return;
+  const name = currentUser.displayName || currentUser.email;
+  el.innerHTML = `<span class="nav-username">${name}</span>
+    <button class="nav-signout-btn" onclick="signOutUser()">Sign Out</button>`;
+}
+
+function signOutUser() {
+  firebase.auth().signOut().then(() => {
+    window.location.href = "login.html";
+  });
 }
 
 function loadFromLocalStorage() {
@@ -137,7 +169,7 @@ function renderSummary() {
         html += `<td>${hrs > 0 ? hrs : "-"}</td>`;
       });
       html += `<td class="week-total">${Math.round(weekTotal * 100) / 100}</td>`;
-      html += `<td><button class="btn btn-danger" onclick="deleteWeek('${key}', '${formatWeekRange(week.monday)}')">X</button></td>`;
+      html += `<td>${isAdmin ? `<button class="btn btn-danger" onclick="deleteWeek('${key}', '${formatWeekRange(week.monday)}')">X</button>` : ""}</td>`;
       html += "</tr>";
     });
 

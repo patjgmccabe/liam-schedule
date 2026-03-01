@@ -309,6 +309,54 @@ tbody tr.past-date td { background: #fafafa; }
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* ===== Login Page ===== */
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.auth-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.auth-tab:hover { color: var(--primary); }
+.auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.auth-error {
+  background: var(--danger-light);
+  color: #b91c1c;
+  border-radius: 7px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+/* ===== Navbar User ===== */
+.nav-user { display: flex; align-items: center; gap: 0.5rem; }
+.nav-username { font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.9); }
+.nav-signout-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.nav-signout-btn:hover { background: rgba(255,255,255,0.28); }
+
 /* ===== Edit Button ===== */
 .btn-edit {
   background: var(--warning-light);

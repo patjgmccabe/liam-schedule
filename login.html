@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In – Liam's Schedule</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="navbar">
+    <h1>Liam's Schedule</h1>
+  </div>
+
+  <div class="container" style="max-width:420px; padding-top:3rem;">
+    <div class="card">
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSignin" onclick="showTab('signin')">Sign In</button>
+        <button class="auth-tab" id="tabSignup" onclick="showTab('signup')">Create Account</button>
+      </div>
+
+      <!-- Sign In -->
+      <div id="signinForm">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Email</label>
+          <input type="email" id="siEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label>Password</label>
+          <input type="password" id="siPassword" placeholder="Password" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') signIn()">
+        </div>
+        <div id="siError" class="auth-error" style="display:none;"></div>
+        <button class="btn btn-primary" style="width:100%;" onclick="signIn()">Sign In</button>
+      </div>
+
+      <!-- Create Account -->
+      <div id="signupForm" style="display:none;">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Your Name</label>
+          <input type="text" id="suName" placeholder="e.g. Brendan" autocomplete="name">
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Email</label>
+          <input type="email" id="suEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label>Password</label>
+          <input type="password" id="suPassword" placeholder="Choose a password (min 6 chars)" autocomplete="new-password"
+            onkeydown="if(event.key==='Enter') signUp()">
+        </div>
+        <div id="suError" class="auth-error" style="display:none;"></div>
+        <button class="btn btn-primary" style="width:100%;" onclick="signUp()">Create Account</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

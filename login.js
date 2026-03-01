@@ -58,7 +58,12 @@ function signUp() {
       return emailjs.send("service_ngsub84", "template_adnp9ov", {
         user_name: name,
         user_email: email
-      }).catch(() => {}); // silently ignore if email fails
+      }).catch((err) => {
+        // Temporarily show error for debugging
+        showAuthError(errEl, "EmailJS error: " + JSON.stringify(err));
+        signingUp = false;
+        throw new Error("emailjs_failed");
+      });
     })
     .then(() => {
       window.location.href = "index.html";

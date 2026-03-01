@@ -52,10 +52,12 @@ function signUp() {
       });
     })
     .then(() => {
-      emailjs.send("service_ngsub84", "template_adnp9ov", {
+      return emailjs.send("service_ngsub84", "template_adnp9ov", {
         user_name: name,
         user_email: email
       }).catch(() => {}); // silently ignore if email fails
+    })
+    .then(() => {
       window.location.href = "index.html";
     })
     .catch((e) => showAuthError(errEl, friendlyError(e.code)));

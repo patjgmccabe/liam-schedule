@@ -45,7 +45,13 @@ function signUp() {
   if (password.length < 6) { showAuthError(errEl, "Password must be at least 6 characters."); return; }
   auth.createUserWithEmailAndPassword(email, password)
     .then((cred) => cred.user.updateProfile({ displayName: name }))
-    .then(() => { window.location.href = "index.html"; })
+    .then(() => {
+      emailjs.send("service_ngsub84", "template_adnp9ov", {
+        user_name: name,
+        user_email: email
+      }).catch(() => {}); // silently ignore if email fails
+      window.location.href = "index.html";
+    })
     .catch((e) => showAuthError(errEl, friendlyError(e.code)));
 }
 

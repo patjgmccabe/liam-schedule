@@ -18,7 +18,7 @@ const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
 const EMAILJS_SERVICE_ID = "service_ngsub84";
-const EMAILJS_SLOT_TEMPLATE_ID = "YOUR_SLOT_TEMPLATE_ID"; // Replace with your new EmailJS template ID
+const EMAILJS_SLOT_TEMPLATE_ID = "template_7h3ep5x";
 
 /* ===== State ===== */
 let db = null;

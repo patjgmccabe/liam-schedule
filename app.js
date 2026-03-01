@@ -41,6 +41,7 @@ const SEED_DATA = [
 document.addEventListener("DOMContentLoaded", () => {
   initTimePickers();
   initDatePicker();
+  initEditTimePickers();
   initFirebase();
 });
 
@@ -332,6 +333,7 @@ function renderTable() {
       </div>`;
     }
 
+    const editBtn = `<button class="btn btn-edit" onclick="editEntry('${id}')" title="Edit">Edit</button>`;
     const deleteBtn = isPast ? "" : `<button class="btn btn-danger" onclick="deleteEntry('${id}')" title="Delete">X</button>`;
 
     html += `<tr class="${isPast ? 'past-date' : ''}">
@@ -344,7 +346,7 @@ function renderTable() {
       <td>${claimCell}</td>
       <td>${statusBadge}</td>
       <td style="text-align:center; font-weight:600;">${entry.hours}</td>
-      <td>${deleteBtn}</td>
+      <td style="white-space:nowrap;">${editBtn} ${deleteBtn}</td>
     </tr>`;
   });
 
@@ -360,6 +362,127 @@ function renderTable() {
 function formatDateDisplay(isoDate) {
   const parts = isoDate.split("-");
   return parts[1] + "-" + parts[2] + "-" + parts[0];
+}
+
+/* ===== Edit Modal ===== */
+let editingId = null;
+let editDatePicker = null;
+
+function initEditTimePickers() {
+  const hours = [];
+  for (let i = 1; i <= 12; i++) hours.push(i);
+  const mins = [];
+  for (let i = 0; i < 60; i += 5) mins.push(i.toString().padStart(2, "0"));
+
+  ["editStart", "editEnd"].forEach((prefix) => {
+    const hourSel = document.getElementById(prefix + "Hour");
+    const minSel = document.getElementById(prefix + "Min");
+    hourSel.innerHTML = hours.map(h => `<option value="${h}">${h}</option>`).join("");
+    minSel.innerHTML = mins.map(m => `<option value="${m}">${m}</option>`).join("");
+    hourSel.addEventListener("change", recalcEditHours);
+    minSel.addEventListener("change", recalcEditHours);
+  });
+  document.getElementById("editStartAmpm").addEventListener("change", recalcEditHours);
+  document.getElementById("editEndAmpm").addEventListener("change", recalcEditHours);
+
+  editDatePicker = flatpickr("#editDate", {
+    dateFormat: "m-d-Y",
+    disableMobile: true,
+    onChange: function(selectedDates) {
+      if (selectedDates.length > 0) {
+        document.getElementById("editDay").value = DAYS[selectedDates[0].getDay()];
+        recalcEditHours();
+      }
+    }
+  });
+}
+
+function recalcEditHours() {
+  const start = getEditTimeValue("editStart");
+  const end = getEditTimeValue("editEnd");
+  const hours = calcHoursBetween(start, end);
+  document.getElementById("editHoursDisplay").textContent = hours > 0 ? hours : "0";
+}
+
+function getEditTimeValue(prefix) {
+  const h = parseInt(document.getElementById(prefix + "Hour").value);
+  const m = parseInt(document.getElementById(prefix + "Min").value);
+  const ampm = document.getElementById(prefix + "Ampm").value;
+  return formatTime(h, m, ampm);
+}
+
+function setTimeSelects(prefix, timeStr) {
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return;
+  const h = parseInt(match[1]);
+  const mInt = parseInt(match[2]);
+  const ampm = match[3].toUpperCase();
+  const rounded = Math.round(mInt / 5) * 5;
+  document.getElementById(prefix + "Hour").value = h;
+  document.getElementById(prefix + "Min").value = rounded.toString().padStart(2, "0");
+  document.getElementById(prefix + "Ampm").value = ampm;
+}
+
+function editEntry(id) {
+  const entry = allEntries[id];
+  if (!entry) return;
+  editingId = id;
+
+  // Convert stored YYYY-MM-DD to MM-DD-YYYY for flatpickr
+  const parts = entry.date.split("-");
+  const displayDate = parts[1] + "-" + parts[2] + "-" + parts[0];
+  editDatePicker.setDate(displayDate, true, "m-d-Y");
+  document.getElementById("editDay").value = entry.day;
+
+  setTimeSelects("editStart", entry.startTime);
+  setTimeSelects("editEnd", entry.endTime);
+
+  document.getElementById("editType").value = entry.type || "Com Hab";
+  document.getElementById("editDesc").value = entry.description || "";
+  document.getElementById("editLocation").value = entry.location || "";
+
+  recalcEditHours();
+  document.getElementById("editModal").style.display = "flex";
+}
+
+function closeEditModal() {
+  document.getElementById("editModal").style.display = "none";
+  editingId = null;
+}
+
+function saveEdit() {
+  if (!editingId) return;
+
+  const dateInput = document.getElementById("editDate").value;
+  const day = document.getElementById("editDay").value;
+  const startTime = getEditTimeValue("editStart");
+  const endTime = getEditTimeValue("editEnd");
+  const type = document.getElementById("editType").value;
+  const desc = document.getElementById("editDesc").value.trim();
+  const location = document.getElementById("editLocation").value.trim();
+  const hours = calcHoursBetween(startTime, endTime);
+
+  if (!dateInput) { showToast("Please select a date.", "error"); return; }
+  if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
+  if (!location) { showToast("Please enter a location.", "error"); return; }
+
+  // Convert MM-DD-YYYY back to YYYY-MM-DD for storage
+  const dateParts = dateInput.split("-");
+  const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
+
+  const updates = { date: dateISO, day, startTime, endTime, type, description: desc, location, hours };
+
+  if (firebaseReady) {
+    entriesRef.child(editingId).update(updates).then(() => {
+      showToast("Time slot updated!", "success");
+    });
+  } else {
+    Object.assign(allEntries[editingId], updates);
+    saveToLocalStorage();
+    renderTable();
+    showToast("Time slot updated!", "success");
+  }
+  closeEditModal();
 }
 
 /* ===== Toast Notifications ===== */

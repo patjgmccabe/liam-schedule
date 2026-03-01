@@ -17,6 +17,8 @@ const firebaseConfig = {
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
+const EMAILJS_SERVICE_ID = "service_ngsub84";
+const EMAILJS_SLOT_TEMPLATE_ID = "YOUR_SLOT_TEMPLATE_ID"; // Replace with your new EmailJS template ID
 
 /* ===== State ===== */
 let db = null;
@@ -266,6 +268,7 @@ function addEntry() {
   if (firebaseReady) {
     entriesRef.child(id).set(entry).then(() => {
       showToast("Time slot added!", "success");
+      notifyUsersNewSlot(entry);
     });
   } else {
     allEntries[id] = entry;
@@ -523,6 +526,26 @@ function saveEdit() {
     showToast("Time slot updated!", "success");
   }
   closeEditModal();
+}
+
+/* ===== Notify Users of New Slot ===== */
+function notifyUsersNewSlot(entry) {
+  if (!firebaseReady || EMAILJS_SLOT_TEMPLATE_ID === "YOUR_SLOT_TEMPLATE_ID") return;
+  db.ref("users").once("value", (snapshot) => {
+    const users = snapshot.val() || {};
+    Object.values(users).forEach((user) => {
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_SLOT_TEMPLATE_ID, {
+        recipient_name: user.name,
+        recipient_email: user.email,
+        slot_date: formatDateDisplay(entry.date),
+        slot_day: entry.day,
+        slot_time: entry.startTime + " - " + entry.endTime,
+        slot_type: entry.type || "",
+        slot_description: entry.description || "",
+        slot_location: entry.location
+      }).catch(() => {});
+    });
+  });
 }
 
 /* ===== Toast Notifications ===== */

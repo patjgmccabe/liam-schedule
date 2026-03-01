@@ -44,7 +44,13 @@ function signUp() {
   if (!email)            { showAuthError(errEl, "Please enter your email."); return; }
   if (password.length < 6) { showAuthError(errEl, "Password must be at least 6 characters."); return; }
   auth.createUserWithEmailAndPassword(email, password)
-    .then((cred) => cred.user.updateProfile({ displayName: name }))
+    .then((cred) => {
+      const uid = cred.user.uid;
+      return cred.user.updateProfile({ displayName: name }).then(() => {
+        // Save user info to database so they receive slot notifications
+        return firebase.database().ref("users/" + uid).set({ name: name, email: email });
+      });
+    })
     .then(() => {
       emailjs.send("service_ngsub84", "template_adnp9ov", {
         user_name: name,

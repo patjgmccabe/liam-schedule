@@ -11,9 +11,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+let signingUp = false;
+
 // Already signed in → skip to schedule
 auth.onAuthStateChanged((user) => {
-  if (user) window.location.href = "index.html";
+  if (user && !signingUp) window.location.href = "index.html";
 });
 
 function showTab(tab) {
@@ -43,6 +45,7 @@ function signUp() {
   if (!name)             { showAuthError(errEl, "Please enter your name."); return; }
   if (!email)            { showAuthError(errEl, "Please enter your email."); return; }
   if (password.length < 6) { showAuthError(errEl, "Password must be at least 6 characters."); return; }
+  signingUp = true;
   auth.createUserWithEmailAndPassword(email, password)
     .then((cred) => {
       const uid = cred.user.uid;
@@ -60,7 +63,10 @@ function signUp() {
     .then(() => {
       window.location.href = "index.html";
     })
-    .catch((e) => showAuthError(errEl, friendlyError(e.code)));
+    .catch((e) => {
+      signingUp = false;
+      showAuthError(errEl, friendlyError(e.code));
+    });
 }
 
 function showAuthError(el, msg) {

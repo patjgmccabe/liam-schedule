@@ -13,7 +13,7 @@ const firebaseConfig = {
 
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b"];
-const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
+const ADMIN_EMAILS = ["patjg.mccabe@gmail.com", "shannennmccabe@gmail.com"];
 
 let db = null;
 let entriesRef = null;
@@ -52,7 +52,7 @@ function initFirebase() {
       return;
     }
     currentUser = user;
-    isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
     updateNavbar();
 
     if (firebaseReady) return;

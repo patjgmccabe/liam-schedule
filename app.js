@@ -16,7 +16,7 @@ const firebaseConfig = {
 /* ===== Constants ===== */
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
+const ADMIN_EMAILS = ["patjg.mccabe@gmail.com", "shannennmccabe@gmail.com"];
 const EMAILJS_SERVICE_ID = "service_ngsub84";
 const EMAILJS_SLOT_TEMPLATE_ID = "template_7h3ep5x";
 
@@ -74,7 +74,7 @@ function initFirebase() {
       return;
     }
     currentUser = user;
-    isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
     updateNavbar();
     applyAdminUI();
 

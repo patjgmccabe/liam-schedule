@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDPAP Weekly Summary – Liam's Schedule</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .cdpap-banner {
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+      border: 1.5px solid #c4b5fd;
+      border-radius: var(--radius);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .cdpap-banner .cdpap-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6d28d9;
+      background: #ede9fe;
+      border: 1.5px solid #c4b5fd;
+      border-radius: 20px;
+      padding: 0.2rem 0.7rem;
+      white-space: nowrap;
+    }
+    .cdpap-banner p { font-size: 0.9rem; color: #5b21b6; margin: 0; }
+    .summary-table th, .summary-table td { text-align: center; }
+    .summary-table th:first-child, .summary-table td:first-child { text-align: left; }
+    .summary-table .total-row { font-weight: 700; background: var(--primary-light); }
+    .summary-table .week-total { font-weight: 600; color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div class="navbar">
+    <h1>Liam's Schedule</h1>
+    <nav>
+      <a href="index.html">Schedule</a>
+      <a href="summary.html">Weekly Summary</a>
+      <a href="cdpap.html">CDPAP Log</a>
+      <a href="cdpap-summary.html" class="active">CDPAP Summary</a>
+    </nav>
+  </div>
+
+  <div class="container">
+
+    <!-- CDPAP Banner -->
+    <div class="cdpap-banner">
+      <span class="cdpap-label">CDPAP</span>
+      <p>Weekly hours summary for Caleigh, Cristhian, and Jen S. Weeks run Sunday through Saturday.</p>
+    </div>
+
+    <!-- Weekly Summary Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Weekly Hours by Worker</h2>
+      </div>
+      <div class="table-wrapper">
+        <table class="summary-table" id="summaryTable">
+          <thead>
+            <tr>
+              <th>Week (Sun – Sat)</th>
+              <th style="color:#7c3aed;">Caleigh</th>
+              <th style="color:#2563eb;">Cristhian</th>
+              <th style="color:#db2777;">Jen S.</th>
+              <th>Week Total</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody">
+            <tr><td colspan="5" class="empty-state"><p>Loading summary...</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Overall Totals Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Overall Totals</h2>
+      </div>
+      <div id="totalsGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:1rem;">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="cdpap-summary.js"></script>
+</body>
+</html>

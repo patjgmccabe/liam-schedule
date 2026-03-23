@@ -30,189 +30,243 @@
       white-space: nowrap;
     }
     .cdpap-banner p { font-size: 0.9rem; color: #5b21b6; margin: 0; }
+    #signInOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .cdpap-sign-in-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 32px rgba(11,22,40,0.13);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .cdpap-sign-in-card .si-logo {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0b1628;
+      margin-bottom: 0.2rem;
+      letter-spacing: -0.01em;
+    }
+    .cdpap-sign-in-card .si-sub {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+    .cdpap-sign-in-card input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .cdpap-sign-in-card input:focus { outline: none; border-color: #2dd4a8; }
+    .cdpap-sign-in-card .btn-cdpap-signin {
+      width: 100%;
+      padding: 0.7rem;
+      background: #2dd4a8;
+      color: #0b1628;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 0.25rem;
+    }
+    .cdpap-sign-in-card .btn-cdpap-signin:hover { background: #22c99e; }
+    #cdpapAuthError {
+      color: #dc2626;
+      font-size: 0.82rem;
+      min-height: 1.1em;
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
 
-  <div class="navbar">
-    <h1>Liam's Schedule</h1>
-    <nav>
-      <a href="index.html">Schedule</a>
-      <a href="summary.html">Weekly Summary</a>
-      <a href="cdpap.html" class="active">CDPAP Log</a>
-      <a href="cdpap-summary.html">CDPAP Summary</a>
-    </nav>
-    <div id="navUser" class="nav-user"></div>
+  <!-- Sign-In Overlay -->
+  <div id="signInOverlay" style="display:flex;">
+    <div class="cdpap-sign-in-card">
+      <div class="si-logo">Liam's Schedule</div>
+      <div class="si-sub">Admin access only</div>
+      <div id="cdpapAuthError"></div>
+      <input type="email" id="cdpapEmailInput" placeholder="Email address" autocomplete="email">
+      <input type="password" id="cdpapPasswordInput" placeholder="Password" autocomplete="current-password">
+      <button class="btn-cdpap-signin" id="cdpapSignInBtn">Sign In</button>
+    </div>
   </div>
 
-  <div class="container">
-
-    <div class="cdpap-banner">
-      <span class="cdpap-label">CDPAP</span>
-      <p>Log hours worked by Caleigh, Cristhian, and Jen S. These are tracked separately from the main schedule.</p>
+  <!-- Main Board (hidden until admin auth confirmed) -->
+  <div id="mainContent" style="display:none;">
+    <div class="navbar">
+      <h1>Liam's Schedule</h1>
+      <nav>
+        <a href="index.html">Schedule</a>
+        <a href="summary.html">Weekly Summary</a>
+        <a href="cdpap.html" class="active">CDPAP Log</a>
+        <a href="cdpap-summary.html">CDPAP Summary</a>
+      </nav>
+      <div id="navUser" class="nav-user"></div>
     </div>
 
-    <!-- Log Entry Card -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Hours Log</h2>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <span id="entryCount" style="font-size:0.82rem;color:var(--text-secondary);"></span>
-          <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()">+ Log New Entry</button>
-        </div>
+    <div class="container">
+      <div class="cdpap-banner">
+        <span class="cdpap-label">CDPAP</span>
+        <p>Log hours worked by Caleigh, Cristhian, and Jen S. These are tracked separately from the main schedule.</p>
       </div>
 
-      <!-- Entry Form -->
-      <div class="form-section" id="entryForm">
-        <div class="form-grid">
+      <!-- Log Entry Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Hours Log</h2>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <span id="entryCount" style="font-size:0.82rem;color:var(--text-secondary);"></span>
+            <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()">+ Log New Entry</button>
+          </div>
+        </div>
 
-          <!-- Worker -->
+        <!-- Entry Form -->
+        <div class="form-section" id="entryForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Worker</label>
+              <select id="entryWorker">
+                <option value="">Select worker...</option>
+                <option value="Caleigh">Caleigh</option>
+                <option value="Cristhian">Cristhian</option>
+                <option value="Jen S.">Jen S.</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="text" id="entryDate" placeholder="Pick a date..." readonly>
+            </div>
+            <div class="form-group">
+              <label>Day</label>
+              <input type="text" id="entryDay" readonly placeholder="Auto-filled">
+            </div>
+            <div class="form-group">
+              <label>Start Time</label>
+              <div class="time-row">
+                <select id="startHour"></select>
+                <span class="time-sep">:</span>
+                <select id="startMin"></select>
+                <select id="startAmpm"><option>AM</option><option>PM</option></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>End Time</label>
+              <div class="time-row">
+                <select id="endHour"></select>
+                <span class="time-sep">:</span>
+                <select id="endMin"></select>
+                <select id="endAmpm"><option>AM</option><option selected>PM</option></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Hours</label>
+              <div class="hours-display" id="hoursDisplay">0</div>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Notes (optional)</label>
+              <input type="text" id="entryDesc" placeholder="e.g. Physical therapy, community outing...">
+            </div>
+          </div>
+          <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+            <button class="btn btn-primary" onclick="addEntry()">Save Entry</button>
+            <button class="btn btn-outline" onclick="toggleForm()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Log Table -->
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Day</th><th>Worker</th>
+                <th>Time Slot</th><th>Hours</th><th>Notes</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="logBody">
+              <tr><td colspan="7" class="empty-state"><p>Loading...</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal" style="display:none;">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Edit Entry</h2>
+          <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
+        </div>
+        <div class="form-grid">
           <div class="form-group">
             <label>Worker</label>
-            <select id="entryWorker">
-              <option value="">Select worker...</option>
+            <select id="editWorker">
               <option value="Caleigh">Caleigh</option>
               <option value="Cristhian">Cristhian</option>
               <option value="Jen S.">Jen S.</option>
             </select>
           </div>
-
-          <!-- Date -->
           <div class="form-group">
             <label>Date</label>
-            <input type="text" id="entryDate" placeholder="Pick a date..." readonly>
+            <input type="text" id="editDate" placeholder="Pick a date..." readonly>
           </div>
-
-          <!-- Day (auto) -->
           <div class="form-group">
             <label>Day</label>
-            <input type="text" id="entryDay" readonly placeholder="Auto-filled">
+            <input type="text" id="editDay" readonly placeholder="Auto-filled">
           </div>
-
-          <!-- Start Time -->
           <div class="form-group">
             <label>Start Time</label>
             <div class="time-row">
-              <select id="startHour"></select>
+              <select id="editStartHour"></select>
               <span class="time-sep">:</span>
-              <select id="startMin"></select>
-              <select id="startAmpm"><option>AM</option><option>PM</option></select>
+              <select id="editStartMin"></select>
+              <select id="editStartAmpm"><option>AM</option><option>PM</option></select>
             </div>
           </div>
-
-          <!-- End Time -->
           <div class="form-group">
             <label>End Time</label>
             <div class="time-row">
-              <select id="endHour"></select>
+              <select id="editEndHour"></select>
               <span class="time-sep">:</span>
-              <select id="endMin"></select>
-              <select id="endAmpm"><option>AM</option><option selected>PM</option></select>
+              <select id="editEndMin"></select>
+              <select id="editEndAmpm"><option>AM</option><option>PM</option></select>
             </div>
           </div>
-
-          <!-- Hours (auto) -->
           <div class="form-group">
             <label>Hours</label>
-            <div class="hours-display" id="hoursDisplay">0</div>
+            <div class="hours-display" id="editHoursDisplay">0</div>
           </div>
-
-          <!-- Notes -->
           <div class="form-group" style="grid-column: span 2;">
             <label>Notes (optional)</label>
-            <input type="text" id="entryDesc" placeholder="e.g. Physical therapy, community outing...">
+            <input type="text" id="editDesc" placeholder="e.g. Physical therapy...">
           </div>
-
         </div>
         <div style="margin-top:1rem;display:flex;gap:0.5rem;">
-          <button class="btn btn-primary" onclick="addEntry()">Save Entry</button>
-          <button class="btn btn-outline" onclick="toggleForm()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+          <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
         </div>
-      </div>
-
-      <!-- Log Table -->
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Day</th>
-              <th>Worker</th>
-              <th>Time Slot</th>
-              <th>Hours</th>
-              <th>Notes</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="logBody">
-            <tr><td colspan="7" class="empty-state"><p>Loading...</p></td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
-
-  </div>
-
-  <!-- Toast -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <!-- Edit Modal -->
-  <div class="modal-overlay" id="editModal" style="display:none;">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Edit Entry</h2>
-        <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Worker</label>
-          <select id="editWorker">
-            <option value="Caleigh">Caleigh</option>
-            <option value="Cristhian">Cristhian</option>
-            <option value="Jen S.">Jen S.</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Date</label>
-          <input type="text" id="editDate" placeholder="Pick a date..." readonly>
-        </div>
-        <div class="form-group">
-          <label>Day</label>
-          <input type="text" id="editDay" readonly placeholder="Auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Start Time</label>
-          <div class="time-row">
-            <select id="editStartHour"></select>
-            <span class="time-sep">:</span>
-            <select id="editStartMin"></select>
-            <select id="editStartAmpm"><option>AM</option><option>PM</option></select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>End Time</label>
-          <div class="time-row">
-            <select id="editEndHour"></select>
-            <span class="time-sep">:</span>
-            <select id="editEndMin"></select>
-            <select id="editEndAmpm"><option>AM</option><option>PM</option></select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Hours</label>
-          <div class="hours-display" id="editHoursDisplay">0</div>
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-          <label>Notes (optional)</label>
-          <input type="text" id="editDesc" placeholder="e.g. Physical therapy...">
-        </div>
-      </div>
-      <div style="margin-top:1rem;display:flex;gap:0.5rem;">
-        <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
-        <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
+  </div><!-- end mainContent -->
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -220,4 +274,4 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="cdpap.js"></script>
 </body>
-</html>
+              </html>

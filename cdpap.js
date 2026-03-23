@@ -1,7 +1,7 @@
 /* =============================================================
    CDPAP HOURS LOG — Admin Only
    Workers: Caleigh, Cristhian, Jen S.
-   ============================================================= */
+============================================================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyDyvJBbVCL-9oST1VG9apdfk_6vUYkxIrs",
@@ -22,17 +22,71 @@ let entriesRef = null;
 let allEntries = {};
 let firebaseReady = false;
 let currentUser = null;
+let appInitialized = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+
   auth.onAuthStateChanged((user) => {
-    if (!user) { window.location.href = "login.html"; return; }
     currentUser = user;
-    if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) { window.location.href = "index.html"; return; }
-    initApp();
+    updateAuthUI(user);
+    if (user && ADMIN_EMAILS.includes(user.email.toLowerCase()) && !appInitialized) {
+      appInitialized = true;
+      initApp();
+    }
+  });
+
+  document.getElementById("cdpapSignInBtn").addEventListener("click", handleSignIn);
+  ["cdpapEmailInput", "cdpapPasswordInput"].forEach(id => {
+    document.getElementById(id).addEventListener("keypress", (e) => {
+      if (e.key === "Enter") handleSignIn();
+    });
   });
 });
+
+function handleSignIn() {
+  const email = document.getElementById("cdpapEmailInput").value.trim();
+  const password = document.getElementById("cdpapPasswordInput").value;
+  const errEl = document.getElementById("cdpapAuthError");
+  errEl.textContent = "";
+  if (!email || !password) { errEl.textContent = "Please enter email and password."; return; }
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .catch(() => { errEl.textContent = "Sign-in failed. Check your credentials."; });
+}
+
+function handleSignOut() {
+  firebase.auth().signOut();
+}
+
+function updateAuthUI(user) {
+  const overlay = document.getElementById("signInOverlay");
+  const mainContent = document.getElementById("mainContent");
+  const navUser = document.getElementById("navUser");
+  const errEl = document.getElementById("cdpapAuthError");
+
+  if (!user) {
+    overlay.style.display = "flex";
+    mainContent.style.display = "none";
+    if (navUser) navUser.innerHTML = "";
+    if (errEl) errEl.textContent = "";
+    return;
+  }
+
+  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    overlay.style.display = "flex";
+    mainContent.style.display = "none";
+    if (errEl) errEl.textContent = "Access denied. This page is for admins only.";
+    return;
+  }
+
+  overlay.style.display = "none";
+  mainContent.style.display = "block";
+  if (navUser) {
+    navUser.innerHTML = `<span class="nav-user-email">${user.email}</span>
+      <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>`;
+  }
+}
 
 function initApp() {
   initTimePickers();
@@ -96,7 +150,7 @@ function initTimePickers() {
 function initEditTimePickers() {
   buildTimeSelects("editStart", "9", recalcEditHours);
   buildTimeSelects("editEnd", "10", recalcEditHours);
-  editDatePicker = flatpickr("#editDate", {
+  editDatePicker = flatpickr(document.getElementById("editDate"), {
     dateFormat: "m-d-Y",
     disableMobile: true,
     onChange: function(selectedDates) {
@@ -159,16 +213,13 @@ function addEntry() {
   const endTime = getTimeValue("end");
   const desc = document.getElementById("entryDesc").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
-
   if (!worker) { showToast("Please select a worker.", "error"); return; }
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
-
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
   const entry = { worker, date: dateISO, day, startTime, endTime, hours, description: desc, createdAt: Date.now() };
   const id = generateId();
-
   if (firebaseReady) {
     entriesRef.child(id).set(entry).then(() => showToast("Hours logged for " + worker + "!", "success"));
   } else {
@@ -176,7 +227,6 @@ function addEntry() {
     renderTable();
     showToast("Hours logged for " + worker + "!", "success");
   }
-
   document.getElementById("entryWorker").value = "";
   document.getElementById("entryDate").value = "";
   document.getElementById("entryDay").value = "";
@@ -201,13 +251,11 @@ function renderTable() {
     const d = b[1].date.localeCompare(a[1].date);
     return d !== 0 ? d : timeToMinutes(b[1].startTime) - timeToMinutes(a[1].startTime);
   });
-
   if (sorted.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>No hours logged yet. Use the button above to add an entry.</p></td></tr>';
     document.getElementById("entryCount").textContent = "";
     return;
   }
-
   const colors = { "Caleigh": "#7c3aed", "Cristhian": "#2563eb", "Jen S.": "#db2777" };
   tbody.innerHTML = sorted.map(([id, entry]) => {
     const parts = entry.date.split("-");
@@ -269,15 +317,12 @@ function saveEdit() {
   const endTime = getTimeValue("editEnd");
   const desc = document.getElementById("editDesc").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
-
   if (!worker) { showToast("Please select a worker.", "error"); return; }
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
-
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
   const updates = { worker, date: dateISO, day, startTime, endTime, hours, description: desc };
-
   if (firebaseReady) {
     entriesRef.child(editingId).update(updates).then(() => showToast("Entry updated!", "success"));
   } else {
@@ -300,4 +345,4 @@ function showToast(message, type) {
     toast.style.transition = "all 0.3s ease";
     setTimeout(() => toast.remove(), 300);
   }, 3000);
-}
+       }

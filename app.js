@@ -1,7 +1,5 @@
 /* =============================================================
    FIREBASE CONFIGURATION
-   Replace the values below with your Firebase project config.
-   See README.md for setup instructions.
    ============================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDyvJBbVCL-9oST1VG9apdfk_6vUYkxIrs",
@@ -16,9 +14,7 @@ const firebaseConfig = {
 /* ===== Constants ===== */
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const ADMIN_EMAILS = ["patjg.mccabe@gmail.com", "shannennmccabe@gmail.com"];
-const EMAILJS_SERVICE_ID = "service_ngsub84";
-const EMAILJS_SLOT_TEMPLATE_ID = "template_7h3ep5x";
+const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
 
 /* ===== State ===== */
 let db = null;
@@ -27,9 +23,9 @@ let allEntries = {};
 let showPast = false;
 let firebaseReady = false;
 let currentUser = null;
-let isAdmin = false;
+let authReady = false;
 
-/* ===== Seed Data from existing PDF schedule ===== */
+/* ===== Seed Data ===== */
 const SEED_DATA = [
   { date: "2025-04-26", day: "Saturday", startTime: "10:00 AM", endTime: "11:15 AM", description: "Field T3", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1.25 },
   { date: "2025-04-26", day: "Saturday", startTime: "11:15 AM", endTime: "12:30 PM", description: "", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1.25 },
@@ -51,134 +47,92 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initFirebase() {
-  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-    // Firebase not configured - use localStorage fallback
-    document.getElementById("setupBanner").style.display = "block";
-    isAdmin = true; // allow full access in local fallback mode
-    loadFromLocalStorage();
-    return;
-  }
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") { loadFromLocalStorage(); return; }
   try {
     firebase.initializeApp(firebaseConfig);
-  } catch (e) {
-    console.error("Firebase init error:", e);
-    document.getElementById("setupBanner").style.display = "block";
-    isAdmin = true;
-    loadFromLocalStorage();
-    return;
-  }
-
-  firebase.auth().onAuthStateChanged((user) => {
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
-    currentUser = user;
-    isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
-    updateNavbar();
-    applyAdminUI();
-
-    if (firebaseReady) return; // already set up
-    firebaseReady = true;
     db = firebase.database();
     entriesRef = db.ref("entries");
-    // Listen for real-time changes
-    entriesRef.on("value", (snapshot) => {
-      allEntries = snapshot.val() || {};
-      renderTable();
-    });
-    // Check if we need to seed data
-    entriesRef.once("value", (snapshot) => {
-      if (!snapshot.exists()) {
-        seedData();
-      }
-    });
-  });
+    firebaseReady = true;
+    initAuth();
+    entriesRef.on("value", (snapshot) => { allEntries = snapshot.val() || {}; if (authReady) renderTable(); });
+    entriesRef.once("value", (snapshot) => { if (!snapshot.exists()) seedData(); });
+  } catch (e) { console.error("Firebase init error:", e); loadFromLocalStorage(); }
 }
 
-function updateNavbar() {
-  const el = document.getElementById("navUser");
-  if (!el || !currentUser) return;
-  const name = currentUser.displayName || currentUser.email;
-  el.innerHTML = `<span class="nav-username">${name}</span>
-    <button class="nav-signout-btn" onclick="signOutUser()">Sign Out</button>`;
+/* ===== Firebase Auth ===== */
+function initAuth() {
+  firebase.auth().onAuthStateChanged((user) => { currentUser = user; authReady = true; updateAuthUI(); renderTable(); });
 }
 
-function applyAdminUI() {
-  if (!isAdmin) {
-    const addBtn = document.getElementById("toggleFormBtn");
+function isAdmin() { return currentUser && currentUser.email === ADMIN_EMAIL; }
+function getDisplayName() { if (!currentUser) return null; return currentUser.displayName || currentUser.email.split("@")[0]; }
+
+function updateAuthUI() {
+  const navUser = document.getElementById("navUser");
+  if (!navUser) return;
+  const addBtn = document.getElementById("toggleFormBtn");
+  if (currentUser) {
+    const name = getDisplayName();
+    navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="logoutUser()">Sign Out</button>';
+    if (addBtn) addBtn.style.display = isAdmin() ? "inline-flex" : "none";
+  } else {
+    navUser.innerHTML = '<button class="btn-login" onclick="showLoginModal()">Sign In</button>';
     if (addBtn) addBtn.style.display = "none";
   }
 }
 
-function signOutUser() {
-  firebase.auth().signOut().then(() => {
-    window.location.href = "login.html";
-  });
+function showLoginModal() { document.getElementById("loginModal").style.display = "flex"; setTimeout(() => { const el = document.getElementById("loginEmail"); if (el) el.focus(); }, 80); }
+function closeLoginModal() { document.getElementById("loginModal").style.display = "none"; document.getElementById("loginError").textContent = ""; }
+
+function loginUser() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  errEl.textContent = "";
+  if (!email || !password) { errEl.textContent = "Please enter your email and password."; return; }
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => { closeLoginModal(); showToast("Welcome back!", "success"); })
+    .catch(() => { errEl.textContent = "Incorrect email or password. Please try again."; });
 }
 
+function logoutUser() { firebase.auth().signOut().then(() => { showToast("You've been signed out.", "info"); }); }
+
+/* ===== LocalStorage Fallback ===== */
 function loadFromLocalStorage() {
+  authReady = true;
   const stored = localStorage.getItem("liamScheduleEntries");
-  if (stored) {
-    allEntries = JSON.parse(stored);
-  } else {
-    seedData();
-  }
+  if (stored) { allEntries = JSON.parse(stored); } else { seedData(); }
   renderTable();
 }
 
-function saveToLocalStorage() {
-  localStorage.setItem("liamScheduleEntries", JSON.stringify(allEntries));
-}
+function saveToLocalStorage() { localStorage.setItem("liamScheduleEntries", JSON.stringify(allEntries)); }
 
 function seedData() {
-  SEED_DATA.forEach((entry) => {
-    const id = generateId();
-    entry.createdAt = Date.now();
-    if (firebaseReady) {
-      entriesRef.child(id).set(entry);
-    } else {
-      allEntries[id] = entry;
-    }
-  });
+  SEED_DATA.forEach((entry) => { const id = generateId(); entry.createdAt = Date.now(); if (firebaseReady) { entriesRef.child(id).set(entry); } else { allEntries[id] = entry; } });
   if (!firebaseReady) saveToLocalStorage();
 }
 
-function generateId() {
-  return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
+function generateId() { return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
 /* ===== Date Picker (Flatpickr) ===== */
 function initDatePicker() {
   flatpickr("#entryDate", {
-    dateFormat: "m-d-Y",
-    minDate: "today",
-    disableMobile: true,
-    onChange: function(selectedDates) {
-      if (selectedDates.length > 0) {
-        const d = selectedDates[0];
-        document.getElementById("entryDay").value = DAYS[d.getDay()];
-      }
-    }
+    dateFormat: "m-d-Y", minDate: "today", disableMobile: true,
+    onChange: function(selectedDates) { if (selectedDates.length > 0) { document.getElementById("entryDay").value = DAYS[selectedDates[0].getDay()]; } }
   });
 }
 
 /* ===== Time Picker Dropdowns ===== */
 function initTimePickers() {
-  const hours = [];
-  for (let i = 1; i <= 12; i++) hours.push(i);
-  const mins = [];
-  for (let i = 0; i < 60; i += 5) mins.push(i.toString().padStart(2, "0"));
-
+  const hours = []; for (let i = 1; i <= 12; i++) hours.push(i);
+  const mins = []; for (let i = 0; i < 60; i += 5) mins.push(i.toString().padStart(2, "0"));
   ["start", "end"].forEach((prefix) => {
     const hourSel = document.getElementById(prefix + "Hour");
     const minSel = document.getElementById(prefix + "Min");
-    hourSel.innerHTML = hours.map(h => `<option value="${h}">${h}</option>`).join("");
-    minSel.innerHTML = mins.map(m => `<option value="${m}">${m}</option>`).join("");
-    // Set sensible defaults
+    hourSel.innerHTML = hours.map(h => '<option value="' + h + '">' + h + '</option>').join("");
+    minSel.innerHTML = mins.map(m => '<option value="' + m + '">' + m + '</option>').join("");
     if (prefix === "start") { hourSel.value = "9"; minSel.value = "00"; }
     if (prefix === "end") { hourSel.value = "10"; minSel.value = "00"; }
-    // Recalc hours on change
     hourSel.addEventListener("change", recalcHours);
     minSel.addEventListener("change", recalcHours);
   });
@@ -187,139 +141,77 @@ function initTimePickers() {
   recalcHours();
 }
 
-function getTimeValue(prefix) {
-  const h = parseInt(document.getElementById(prefix + "Hour").value);
-  const m = parseInt(document.getElementById(prefix + "Min").value);
-  const ampm = document.getElementById(prefix + "Ampm").value;
-  return formatTime(h, m, ampm);
-}
-
-function formatTime(h, m, ampm) {
-  return h + ":" + m.toString().padStart(2, "0") + " " + ampm;
-}
+function getTimeValue(prefix) { const h = parseInt(document.getElementById(prefix + "Hour").value); const m = parseInt(document.getElementById(prefix + "Min").value); const ampm = document.getElementById(prefix + "Ampm").value; return formatTime(h, m, ampm); }
+function formatTime(h, m, ampm) { return h + ":" + m.toString().padStart(2, "0") + " " + ampm; }
 
 function timeToMinutes(timeStr) {
   const parts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
   if (!parts) return 0;
-  let h = parseInt(parts[1]);
-  const m = parseInt(parts[2]);
-  const ampm = parts[3].toUpperCase();
+  let h = parseInt(parts[1]); const m = parseInt(parts[2]); const ampm = parts[3].toUpperCase();
   if (ampm === "PM" && h !== 12) h += 12;
   if (ampm === "AM" && h === 12) h = 0;
   return h * 60 + m;
 }
 
-function calcHoursBetween(startStr, endStr) {
-  const startMins = timeToMinutes(startStr);
-  let endMins = timeToMinutes(endStr);
-  if (endMins <= startMins) endMins += 24 * 60; // crosses midnight
-  return Math.round((endMins - startMins) / 60 * 100) / 100;
-}
-
-function recalcHours() {
-  const start = getTimeValue("start");
-  const end = getTimeValue("end");
-  const hours = calcHoursBetween(start, end);
-  document.getElementById("hoursDisplay").textContent = hours > 0 ? hours : "0";
-}
+function calcHoursBetween(startStr, endStr) { const startMins = timeToMinutes(startStr); let endMins = timeToMinutes(endStr); if (endMins <= startMins) endMins += 24 * 60; return Math.round((endMins - startMins) / 60 * 100) / 100; }
+function recalcHours() { const start = getTimeValue("start"); const end = getTimeValue("end"); const hours = calcHoursBetween(start, end); document.getElementById("hoursDisplay").textContent = hours > 0 ? hours : "0"; }
 
 /* ===== Form Toggle ===== */
 function toggleForm() {
-  const form = document.getElementById("entryForm");
-  const btn = document.getElementById("toggleFormBtn");
-  form.classList.toggle("open");
-  btn.classList.toggle("active");
+  if (!isAdmin()) { showToast("Only admins can add time slots.", "error"); return; }
+  const form = document.getElementById("entryForm"); const btn = document.getElementById("toggleFormBtn");
+  form.classList.toggle("open"); btn.classList.toggle("active");
   btn.textContent = form.classList.contains("open") ? "Cancel" : "+ Add New Slot";
 }
 
-/* ===== Add Entry ===== */
+/* ===== Add Entry (Admin Only) ===== */
 function addEntry() {
+  if (!isAdmin()) { showToast("Only admins can add time slots.", "error"); return; }
   const dateInput = document.getElementById("entryDate").value;
   const day = document.getElementById("entryDay").value;
-  const startTime = getTimeValue("start");
-  const endTime = getTimeValue("end");
+  const startTime = getTimeValue("start"); const endTime = getTimeValue("end");
   const type = document.getElementById("entryType").value;
   const desc = document.getElementById("entryDesc").value.trim();
   const location = document.getElementById("entryLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
-
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
   if (!location) { showToast("Please enter a location.", "error"); return; }
-
-  // Convert date from MM-DD-YYYY to YYYY-MM-DD for storage
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-
-  const entry = {
-    date: dateISO,
-    day: day,
-    startTime: startTime,
-    endTime: endTime,
-    type: type,
-    description: desc,
-    location: location,
-    claimedBy: "",
-    hours: hours,
-    createdAt: Date.now()
-  };
-
+  const entry = { date: dateISO, day, startTime, endTime, type, description: desc, location, claimedBy: "", hours, createdAt: Date.now() };
   const id = generateId();
-  if (firebaseReady) {
-    entriesRef.child(id).set(entry).then(() => {
-      showToast("Time slot added!", "success");
-      notifyUsersNewSlot(entry);
-    });
-  } else {
-    allEntries[id] = entry;
-    saveToLocalStorage();
-    renderTable();
-    showToast("Time slot added!", "success");
-  }
-
-  // Reset form
-  document.getElementById("entryDate").value = "";
-  document.getElementById("entryDay").value = "";
-  document.getElementById("entryDesc").value = "";
-  document.getElementById("entryLocation").value = "";
+  if (firebaseReady) { entriesRef.child(id).set(entry).then(() => showToast("Time slot added!", "success")); } else { allEntries[id] = entry; saveToLocalStorage(); renderTable(); showToast("Time slot added!", "success"); }
+  document.getElementById("entryDate").value = ""; document.getElementById("entryDay").value = ""; document.getElementById("entryDesc").value = ""; document.getElementById("entryLocation").value = "";
   toggleForm();
 }
 
 /* ===== Claim / Unclaim ===== */
 function claimEntry(id) {
-  const sel = document.getElementById("claim-" + id);
-  const name = sel.value;
-  if (!name) { showToast("Please select a name.", "error"); return; }
-  if (firebaseReady) {
-    entriesRef.child(id).update({ claimedBy: name });
+  if (!currentUser) { showLoginModal(); showToast("Please sign in to claim a shift.", "error"); return; }
+  let name;
+  if (isAdmin()) {
+    const sel = document.getElementById("claim-" + id);
+    if (sel) { name = sel.value; if (!name) { showToast("Please select a name.", "error"); return; } } else { name = getDisplayName(); }
   } else {
-    allEntries[id].claimedBy = name;
-    saveToLocalStorage();
-    renderTable();
+    name = getDisplayName();
   }
+  if (firebaseReady) { entriesRef.child(id).update({ claimedBy: name }); } else { allEntries[id].claimedBy = name; saveToLocalStorage(); renderTable(); }
   showToast(name + " claimed the slot!", "success");
 }
 
 function unclaimEntry(id) {
-  if (firebaseReady) {
-    entriesRef.child(id).update({ claimedBy: "" });
-  } else {
-    allEntries[id].claimedBy = "";
-    saveToLocalStorage();
-    renderTable();
-  }
+  if (!currentUser) { showToast("Please sign in.", "error"); return; }
+  const entry = allEntries[id]; const myName = getDisplayName();
+  if (!isAdmin() && entry.claimedBy !== myName) { showToast("You can only remove your own claim.", "error"); return; }
+  if (firebaseReady) { entriesRef.child(id).update({ claimedBy: "" }); } else { allEntries[id].claimedBy = ""; saveToLocalStorage(); renderTable(); }
   showToast("Slot unclaimed.", "info");
 }
 
 function deleteEntry(id) {
+  if (!isAdmin()) { showToast("Only admins can delete entries.", "error"); return; }
   if (!confirm("Delete this time slot?")) return;
-  if (firebaseReady) {
-    entriesRef.child(id).remove();
-  } else {
-    delete allEntries[id];
-    saveToLocalStorage();
-    renderTable();
-  }
+  if (firebaseReady) { entriesRef.child(id).remove(); } else { delete allEntries[id]; saveToLocalStorage(); renderTable(); }
   showToast("Entry deleted.", "info");
 }
 
@@ -335,131 +227,76 @@ function togglePast() {
 /* ===== Render Table ===== */
 function renderTable() {
   const tbody = document.getElementById("scheduleBody");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Sort entries by date then time
-  const sorted = Object.entries(allEntries).sort((a, b) => {
-    const dateCompare = a[1].date.localeCompare(b[1].date);
-    if (dateCompare !== 0) return dateCompare;
-    return timeToMinutes(a[1].startTime) - timeToMinutes(b[1].startTime);
-  });
-
-  let html = "";
-  let visibleCount = 0;
-
+  if (!tbody) return;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const sorted = Object.entries(allEntries).sort((a, b) => { const dc = a[1].date.localeCompare(b[1].date); if (dc !== 0) return dc; return timeToMinutes(a[1].startTime) - timeToMinutes(b[1].startTime); });
+  let html = ""; let visibleCount = 0;
   sorted.forEach(([id, entry]) => {
     const entryDate = new Date(entry.date + "T00:00:00");
     const isPast = entryDate < today;
-
     if (isPast && !showPast) return;
     visibleCount++;
-
     const dateFormatted = formatDateDisplay(entry.date);
-    const timeSlot = entry.startTime + " - " + entry.endTime;
-    const statusBadge = isPast
-      ? '<span class="badge badge-passed">Date Passed</span>'
-      : entry.claimedBy
-        ? '<span class="badge badge-claimed">Claimed</span>'
-        : '<span class="badge badge-available">Available</span>';
-
-    let claimCell;
+    const timeSlot = entry.startTime + " \u2013 " + entry.endTime;
+    const statusBadge = isPast ? '<span class="badge badge-passed">Past</span>' : entry.claimedBy ? '<span class="badge badge-claimed">Claimed</span>' : '<span class="badge badge-available">Available</span>';
+    let claimCell; const myName = getDisplayName();
     if (isPast) {
-      claimCell = entry.claimedBy ? `<span class="claimed-name">${entry.claimedBy}</span>` : '<span style="color:var(--text-secondary);">-</span>';
+      claimCell = entry.claimedBy ? '<span class="claimed-name">' + entry.claimedBy + '</span>' : '<span style="color:var(--text-secondary)">\u2014</span>';
     } else if (entry.claimedBy) {
-      claimCell = `<span class="claimed-name">${entry.claimedBy}</span> <button class="unclaim-btn" onclick="unclaimEntry('${id}')">remove</button>`;
+      const canUnclaim = isAdmin() || (myName && entry.claimedBy === myName);
+      claimCell = '<span class="claimed-name">' + entry.claimedBy + '</span>';
+      if (canUnclaim) claimCell += ' <button class="unclaim-btn" onclick="unclaimEntry(\'' + id + '\')">remove</button>';
+    } else if (!currentUser) {
+      claimCell = '<span class="sign-in-prompt">Sign in to claim</span>';
+    } else if (isAdmin()) {
+      const opts = PARTICIPANTS.map(p => '<option value="' + p + '">' + p + '</option>').join("");
+      claimCell = '<div class="claim-controls"><select id="claim-' + id + '"><option value="">Select...</option>' + opts + '</select><button class="btn btn-success" onclick="claimEntry(\'' + id + '\')">Claim</button></div>';
     } else {
-      const opts = PARTICIPANTS.map(p => `<option value="${p}">${p}</option>`).join("");
-      claimCell = `<div class="claim-controls">
-        <select id="claim-${id}"><option value="">Select...</option>${opts}</select>
-        <button class="btn btn-success" onclick="claimEntry('${id}')">Claim</button>
-      </div>`;
+      claimCell = '<button class="btn btn-success claim-self-btn" onclick="claimEntry(\'' + id + '\')">\u2713 Claim</button>';
     }
-
-    const editBtn = isAdmin ? `<button class="btn btn-edit" onclick="editEntry('${id}')" title="Edit">Edit</button>` : "";
-    const deleteBtn = isAdmin && !isPast ? `<button class="btn btn-danger" onclick="deleteEntry('${id}')" title="Delete">X</button>` : "";
-
-    html += `<tr class="${isPast ? 'past-date' : ''}">
-      <td>${dateFormatted}</td>
-      <td>${entry.day}</td>
-      <td style="white-space:nowrap;">${timeSlot}</td>
-      <td>${entry.type || ""}</td>
-      <td>${entry.description || ""}</td>
-      <td>${entry.location}</td>
-      <td>${claimCell}</td>
-      <td>${statusBadge}</td>
-      <td style="text-align:center; font-weight:600;">${entry.hours}</td>
-      <td style="white-space:nowrap;">${editBtn} ${deleteBtn}</td>
-    </tr>`;
+    const editBtn = isAdmin() ? '<button class="btn btn-edit" onclick="editEntry(\'' + id + '\')" title="Edit">Edit</button>' : "";
+    const deleteBtn = (isAdmin() && !isPast) ? '<button class="btn btn-danger" onclick="deleteEntry(\'' + id + '\')" title="Delete">\u2715</button>' : "";
+    const actionCell = (editBtn || deleteBtn) ? '<div style="display:flex;gap:0.3rem;white-space:nowrap;">' + editBtn + deleteBtn + '</div>' : "";
+    html += '<tr class="' + (isPast ? 'past-date' : '') + '"><td>' + dateFormatted + '</td><td>' + entry.day + '</td><td style="white-space:nowrap;">' + timeSlot + '</td><td>' + (entry.type || "") + '</td><td>' + (entry.description || "") + '</td><td>' + entry.location + '</td><td>' + claimCell + '</td><td>' + statusBadge + '</td><td style="text-align:center; font-weight:700;">' + entry.hours + '</td><td>' + actionCell + '</td></tr>';
   });
-
-  if (visibleCount === 0) {
-    html = `<tr><td colspan="9" class="empty-state"><p>${showPast ? "No entries found." : "No upcoming entries. Add a new time slot!"}</p></td></tr>`;
-  }
-
+  if (visibleCount === 0) { html = '<tr><td colspan="10" class="empty-state"><p>' + (showPast ? "No entries found." : "No upcoming shifts. Check back soon!") + '</p></td></tr>'; }
   tbody.innerHTML = html;
   document.getElementById("entryCount").textContent = visibleCount + " entries";
 }
 
-/* ===== Date Formatting ===== */
-function formatDateDisplay(isoDate) {
-  const parts = isoDate.split("-");
-  return parts[1] + "-" + parts[2] + "-" + parts[0];
-}
+function formatDateDisplay(isoDate) { const parts = isoDate.split("-"); return parts[1] + "/" + parts[2] + "/" + parts[0]; }
 
 /* ===== Edit Modal ===== */
 let editingId = null;
 let editDatePicker = null;
 
 function initEditTimePickers() {
-  const hours = [];
-  for (let i = 1; i <= 12; i++) hours.push(i);
-  const mins = [];
-  for (let i = 0; i < 60; i += 5) mins.push(i.toString().padStart(2, "0"));
-
+  const hours = []; for (let i = 1; i <= 12; i++) hours.push(i);
+  const mins = []; for (let i = 0; i < 60; i += 5) mins.push(i.toString().padStart(2, "0"));
   ["editStart", "editEnd"].forEach((prefix) => {
     const hourSel = document.getElementById(prefix + "Hour");
     const minSel = document.getElementById(prefix + "Min");
-    hourSel.innerHTML = hours.map(h => `<option value="${h}">${h}</option>`).join("");
-    minSel.innerHTML = mins.map(m => `<option value="${m}">${m}</option>`).join("");
+    hourSel.innerHTML = hours.map(h => '<option value="' + h + '">' + h + '</option>').join("");
+    minSel.innerHTML = mins.map(m => '<option value="' + m + '">' + m + '</option>').join("");
     hourSel.addEventListener("change", recalcEditHours);
     minSel.addEventListener("change", recalcEditHours);
   });
   document.getElementById("editStartAmpm").addEventListener("change", recalcEditHours);
   document.getElementById("editEndAmpm").addEventListener("change", recalcEditHours);
-
-  editDatePicker = flatpickr("#editDate", {
-    dateFormat: "m-d-Y",
-    disableMobile: true,
-    onChange: function(selectedDates) {
-      if (selectedDates.length > 0) {
-        document.getElementById("editDay").value = DAYS[selectedDates[0].getDay()];
-        recalcEditHours();
-      }
-    }
+  // Pass DOM element (not selector string) so flatpickr returns single instance, not array
+  editDatePicker = flatpickr(document.getElementById("editDate"), {
+    dateFormat: "m-d-Y", disableMobile: true,
+    onChange: function(selectedDates) { if (selectedDates.length > 0) { document.getElementById("editDay").value = DAYS[selectedDates[0].getDay()]; recalcEditHours(); } }
   });
 }
 
-function recalcEditHours() {
-  const start = getEditTimeValue("editStart");
-  const end = getEditTimeValue("editEnd");
-  const hours = calcHoursBetween(start, end);
-  document.getElementById("editHoursDisplay").textContent = hours > 0 ? hours : "0";
-}
-
-function getEditTimeValue(prefix) {
-  const h = parseInt(document.getElementById(prefix + "Hour").value);
-  const m = parseInt(document.getElementById(prefix + "Min").value);
-  const ampm = document.getElementById(prefix + "Ampm").value;
-  return formatTime(h, m, ampm);
-}
+function recalcEditHours() { const start = getEditTimeValue("editStart"); const end = getEditTimeValue("editEnd"); const hours = calcHoursBetween(start, end); document.getElementById("editHoursDisplay").textContent = hours > 0 ? hours : "0"; }
+function getEditTimeValue(prefix) { const h = parseInt(document.getElementById(prefix + "Hour").value); const m = parseInt(document.getElementById(prefix + "Min").value); const ampm = document.getElementById(prefix + "Ampm").value; return formatTime(h, m, ampm); }
 
 function setTimeSelects(prefix, timeStr) {
   const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
   if (!match) return;
-  const h = parseInt(match[1]);
-  const mInt = parseInt(match[2]);
-  const ampm = match[3].toUpperCase();
+  const h = parseInt(match[1]); const mInt = parseInt(match[2]); const ampm = match[3].toUpperCase();
   const rounded = Math.round(mInt / 5) * 5;
   document.getElementById(prefix + "Hour").value = h;
   document.getElementById(prefix + "Min").value = rounded.toString().padStart(2, "0");
@@ -467,85 +304,40 @@ function setTimeSelects(prefix, timeStr) {
 }
 
 function editEntry(id) {
-  const entry = allEntries[id];
-  if (!entry) return;
+  if (!isAdmin()) { showToast("Only admins can edit entries.", "error"); return; }
+  const entry = allEntries[id]; if (!entry) return;
   editingId = id;
-
-  // Convert stored YYYY-MM-DD to MM-DD-YYYY for flatpickr
   const parts = entry.date.split("-");
   const displayDate = parts[1] + "-" + parts[2] + "-" + parts[0];
   editDatePicker.setDate(displayDate, true, "m-d-Y");
   document.getElementById("editDay").value = entry.day;
-
-  setTimeSelects("editStart", entry.startTime);
-  setTimeSelects("editEnd", entry.endTime);
-
+  setTimeSelects("editStart", entry.startTime); setTimeSelects("editEnd", entry.endTime);
   document.getElementById("editType").value = entry.type || "Com Hab";
   document.getElementById("editDesc").value = entry.description || "";
   document.getElementById("editLocation").value = entry.location || "";
-
   recalcEditHours();
   document.getElementById("editModal").style.display = "flex";
 }
 
-function closeEditModal() {
-  document.getElementById("editModal").style.display = "none";
-  editingId = null;
-}
+function closeEditModal() { document.getElementById("editModal").style.display = "none"; editingId = null; }
 
 function saveEdit() {
-  if (!editingId) return;
-
+  if (!editingId || !isAdmin()) return;
   const dateInput = document.getElementById("editDate").value;
   const day = document.getElementById("editDay").value;
-  const startTime = getEditTimeValue("editStart");
-  const endTime = getEditTimeValue("editEnd");
+  const startTime = getEditTimeValue("editStart"); const endTime = getEditTimeValue("editEnd");
   const type = document.getElementById("editType").value;
   const desc = document.getElementById("editDesc").value.trim();
   const location = document.getElementById("editLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
-
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
   if (!location) { showToast("Please enter a location.", "error"); return; }
-
-  // Convert MM-DD-YYYY back to YYYY-MM-DD for storage
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-
   const updates = { date: dateISO, day, startTime, endTime, type, description: desc, location, hours };
-
-  if (firebaseReady) {
-    entriesRef.child(editingId).update(updates).then(() => {
-      showToast("Time slot updated!", "success");
-    });
-  } else {
-    Object.assign(allEntries[editingId], updates);
-    saveToLocalStorage();
-    renderTable();
-    showToast("Time slot updated!", "success");
-  }
+  if (firebaseReady) { entriesRef.child(editingId).update(updates).then(() => showToast("Time slot updated!", "success")); } else { Object.assign(allEntries[editingId], updates); saveToLocalStorage(); renderTable(); showToast("Time slot updated!", "success"); }
   closeEditModal();
-}
-
-/* ===== Notify Users of New Slot ===== */
-function notifyUsersNewSlot(entry) {
-  if (!firebaseReady || EMAILJS_SLOT_TEMPLATE_ID === "YOUR_SLOT_TEMPLATE_ID") return;
-  db.ref("users").once("value", (snapshot) => {
-    const users = snapshot.val() || {};
-    Object.values(users).forEach((user) => {
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_SLOT_TEMPLATE_ID, {
-        recipient_name: user.name,
-        recipient_email: user.email,
-        slot_date: formatDateDisplay(entry.date),
-        slot_day: entry.day,
-        slot_time: entry.startTime + " - " + entry.endTime,
-        slot_type: entry.type || "",
-        slot_description: entry.description || "",
-        slot_location: entry.location
-      }).catch(() => {});
-    });
-  });
 }
 
 /* ===== Toast Notifications ===== */
@@ -555,10 +347,5 @@ function showToast(message, type) {
   toast.className = "toast toast-" + type;
   toast.textContent = message;
   container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateX(100%)";
-    toast.style.transition = "all 0.3s ease";
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
+  setTimeout(() => { toast.style.opacity = "0"; toast.style.transform = "translateX(110%)"; toast.style.transition = "all 0.3s ease"; setTimeout(() => toast.remove(), 300); }, 3000);
+     }

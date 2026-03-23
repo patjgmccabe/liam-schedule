@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Liam's Schedule</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,479 +13,39 @@
 
   <!-- Navigation -->
   <div class="navbar">
-    <h1>Liam's Schedule</h1>
-    <nav>
-      <a href="index.html" class="active">Schedule</a>
-      <a href="summary.html">Weekly Summary</a>
-      <a href="cdpap.html" class="cdpap-nav-link" style="display:none;">CDPAP Log</a>
-      <a href="cdpap-summary.html" class="cdpap-nav-link" style="display:none;">CDPAP Summary</a>
-    </nav>
-    <div id="navUser" class="nav-user"></div>
-  </div>
-
-  <div class="container">
-
-    <!-- Setup Banner (shown when Firebase is not configured) -->
-    <div class="setup-banner" id="setupBanner" style="display:none;">
-      <h3>Firebase Setup Required</h3>
-      <p>To enable multi-user access, configure Firebase in <code>app.js</code>. See the README for step-by-step instructions.</p>
-    </div>
-
-    <!-- Add Entry Card -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Time Slots</h2>
-        <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()">+ Add New Slot</button>
-      </div>
-
-      <div class="form-section" id="entryForm">
-        <div class="form-grid">
-          <!-- Date -->
-          <div class="form-group">
-            <label>Date</label>
-            <input type="text" id="entryDate" placeholder="Pick a date..." readonly>
-          </div>
-          <!-- Day (auto) -->
-          <div class="form-group">
-            <label>Day</label>
-            <input type="text" id="entryDay" readonly placeholder="Auto-filled">
-          </div>
-          <!-- Start Time -->
-          <div class="form-group">
-            <label>Start Time</label>
-            <div class="time-row">
-              <select id="startHour"></select>
-              <span class="time-sep">:</span>
-              <select id="startMin"></select>
-              <select id="startAmpm"><option>AM</option><option>PM</option></select>
-            </div>
-          </div>
-          <!-- End Time -->
-          <div class="form-group">
-            <label>End Time</label>
-            <div class="time-row">
-              <select id="endHour"></select>
-              <span class="time-sep">:</span>
-              <select id="endMin"></select>
-              <select id="endAmpm"><option>AM</option><option>PM</option></select>
-            </div>
-          </div>
-          <!-- Hours (auto) -->
-          <div class="form-group">
-            <label>Hours</label>
-            <div class="hours-display" id="hoursDisplay">0</div>
-          </div>
-          <!-- Type -->
-          <div class="form-group">
-            <label>Type</label>
-            <select id="entryType">
-              <option value="Com Hab">Com Hab</option>
-              <option value="Respite">Respite</option>
-            </select>
-          </div>
-          <!-- Description -->
-          <div class="form-group">
-            <label>Description</label>
-            <input type="text" id="entryDesc" placeholder="e.g. Field T3">
-          </div>
-          <!-- Location -->
-          <div class="form-group" style="grid-column: span 2;">
-            <label>Location</label>
-            <input type="text" id="entryLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
-          </div>
-        </div>
-        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
-          <button class="btn btn-primary" onclick="addEntry()">Add Time Slot</button>
-          <button class="btn btn-outline" onclick="toggleForm()">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Schedule Table Card -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Schedule</h2>
-        <div style="display:flex; gap:0.5rem; align-items:center;">
-          <button class="toggle-btn" id="showPastBtn" onclick="togglePast()">Show Past Dates</button>
-          <span id="entryCount" style="font-size:0.82rem; color:var(--text-secondary);"></span>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Day</th>
-              <th>Time Slot</th>
-              <th>Type</th>
-              <th>Description</th>
-              <th>Location</th>
-              <th>Claimed By</th>
-              <th>Status</th>
-              <th>Hours</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="scheduleBody">
-            <tr><td colspan="10" class="empty-state"><p>Loading schedule...</p></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <!-- Edit Modal -->
-  <div class="modal-overlay" id="editModal" style="display:none;">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Edit Time Slot</h2>
-        <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Date</label>
-          <input type="text" id="editDate" placeholder="Pick a date..." readonly>
-        </div>
-        <div class="form-group">
-          <label>Day</label>
-          <input type="text" id="editDay" readonly placeholder="Auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Start Time</label>
-          <div class="time-row">
-            <select id="editStartHour"></select>
-            <span class="time-sep">:</span>
-            <select id="editStartMin"></select>
-            <select id="editStartAmpm"><option>AM</option><option>PM</option></select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>End Time</label>
-          <div class="time-row">
-            <select id="editEndHour"></select>
-            <span class="time-sep">:</span>
-            <select id="editEndMin"></select>
-            <select id="editEndAmpm"><option>AM</option><option>PM</option></select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Hours</label>
-          <div class="hours-display" id="editHoursDisplay">0</div>
-        </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select id="editType">
-            <option value="Com Hab">Com Hab</option>
-            <option value="Respite">Respite</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <input type="text" id="editDesc" placeholder="e.g. Field T3">
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-          <label>Location</label>
-          <input type="text" id="editLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
-        </div>
-      </div>
-      <div style="margin-top:1rem; display:flex; gap:0.5rem;">
-        <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
-        <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script>emailjs.init({ publicKey: "uW7q20t4PPQ13A1C4" });</script>
-  <script src="app.js?v=2"></script>
-  <script>
-  // Show CDPAP nav links for admin users after Firebase auth initializes
-  document.addEventListener('DOMContentLoaded', function() {
-    firebase.auth().onAuthStateChanged(function(user) {
-      var ADMIN = ["patjg.mccabe@gmail.com", "shannennmccabe@gmail.com"];
-      if (user && ADMIN.includes(user.email.toLowerCase())) {
-        document.querySelectorAll('.cdpap-nav-link').forEach(function(el) { el.style.display = ''; });
-      }
-    });
-  });
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Liam's Schedule</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <!-- Navigation -->
-  <div class="navbar">
-    <h1>Liam's Schedule</h1>
-    <nav>
-      <a href="index.html" class="active">Schedule</a>
-      <a href="summary.html">Weekly Summary</a>
-      <a href="cdpap.html" class="cdpap-nav-link" style="display:none;">CDPAP Log</a>
-      <a href="cdpap-summary.html" class="cdpap-nav-link" style="display:none;">CDPAP Summary</a>
-    </nav>
-    <div id="navUser" class="nav-user"></div>
-  </div>
-
-  <div class="container">
-
-    <!-- Setup Banner (shown when Firebase is not configured) -->
-    <div class="setup-banner" id="setupBanner" style="display:none;">
-      <h3>Firebase Setup Required</h3>
-      <p>To enable multi-user access, configure Firebase in <code>app.js</code>. See the README for step-by-step instructions.</p>
-    </div>
-
-    <!-- Add Entry Card -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Time Slots</h2>
-        <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()">+ Add New Slot</button>
-      </div>
-
-      <div class="form-section" id="entryForm">
-        <div class="form-grid">
-          <!-- Date -->
-          <div class="form-group">
-            <label>Date</label>
-            <input type="text" id="entryDate" placeholder="Pick a date..." readonly>
-          </div>
-          <!-- Day (auto) -->
-          <div class="form-group">
-            <label>Day</label>
-            <input type="text" id="entryDay" readonly placeholder="Auto-filled">
-          </div>
-          <!-- Start Time -->
-          <div class="form-group">
-            <label>Start Time</label>
-            <div class="time-row">
-              <select id="startHour"></select>
-              <span class="time-sep">:</span>
-              <select id="startMin"></select>
-              <select id="startAmpm"><option>AM</option><option>PM</option></select>
-            </div>
-          </div>
-          <!-- End Time -->
-          <div class="form-group">
-            <label>End Time</label>
-            <div class="time-row">
-              <select id="endHour"></select>
-              <span class="time-sep">:</span>
-              <select id="endMin"></select>
-              <select id="endAmpm"><option>AM</option><option>PM</option></select>
-            </div>
-          </div>
-          <!-- Hours (auto) -->
-          <div class="form-group">
-            <label>Hours</label>
-            <div class="hours-display" id="hoursDisplay">0</div>
-          </div>
-          <!-- Type -->
-          <div class="form-group">
-            <label>Type</label>
-            <select id="entryType">
-              <option value="Com Hab">Com Hab</option>
-              <option value="Respite">Respite</option>
-            </select>
-          </div>
-          <!-- Description -->
-          <div class="form-group">
-            <label>Description</label>
-            <input type="text" id="entryDesc" placeholder="e.g. Field T3">
-          </div>
-          <!-- Location -->
-          <div class="form-group" style="grid-column: span 2;">
-            <label>Location</label>
-            <input type="text" id="entryLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
-          </div>
-        </div>
-        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
-          <button class="btn btn-primary" onclick="addEntry()">Add Time Slot</button>
-          <button class="btn btn-outline" onclick="toggleForm()">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Schedule Table Card -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Schedule</h2>
-        <div style="display:flex; gap:0.5rem; align-items:center;">
-          <button class="toggle-btn" id="showPastBtn" onclick="togglePast()">Show Past Dates</button>
-          <span id="entryCount" style="font-size:0.82rem; color:var(--text-secondary);"></span>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Day</th>
-              <th>Time Slot</th>
-              <th>Type</th>
-              <th>Description</th>
-              <th>Location</th>
-              <th>Claimed By</th>
-              <th>Status</th>
-              <th>Hours</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="scheduleBody">
-            <tr><td colspan="10" class="empty-state"><p>Loading schedule...</p></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <!-- Edit Modal -->
-  <div class="modal-overlay" id="editModal" style="display:none;">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Edit Time Slot</h2>
-        <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Date</label>
-          <input type="text" id="editDate" placeholder="Pick a date..." readonly>
-        </div>
-        <div class="form-group">
-          <label>Day</label>
-          <input type="text" id="editDay" readonly placeholder="Auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Start Time</label>
-          <div class="time-row">
-            <select id="editStartHour"></select>
-            <span class="time-sep">:</span>
-            <select id="editStartMin"></select>
-            <select id="editStartAmpm"><option>AM</option><option>PM</option></select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>End Time</label>
-          <div class="time-row">
-            <select id="editEndHour"></select>
-            <span class="time-sep">:</span>
-            <select id="editEndMin"></select>
-            <select id="editEndAmpm"><option>AM</option><option>PM</option></select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Hours</label>
-          <div class="hours-display" id="editHoursDisplay">0</div>
-        </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select id="editType">
-            <option value="Com Hab">Com Hab</option>
-            <option value="Respite">Respite</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <input type="text" id="editDesc" placeholder="e.g. Field T3">
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-          <label>Location</label>
-          <input type="text" id="editLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
-        </div>
-      </div>
-      <div style="margin-top:1rem; display:flex; gap:0.5rem;">
-        <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
-        <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script>emailjs.init({ publicKey: "uW7q20t4PPQ13A1C4" });</script>
-  <script src="app.js?v=2"></script>
-  <script>
-  firebase.auth().onAuthStateChanged(function(user) {
-    var ADMIN = ["patjg.mccabe@gmail.com", "shannennmccabe@gmail.com"];
-    if (user && ADMIN.includes(user.email.toLowerCase())) {
-      document.querySelectorAll('.cdpap-nav-link').forEach(function(el) { el.style.display = ''; });
-    }
-  });
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Liam's Schedule</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <!-- Navigation -->
-  <div class="navbar">
-    <h1>Liam's Schedule</h1>
-    <div style="display:flex; align-items:center; gap:1rem;">
+    <div class="navbar-left">
+      <h1><span class="logo-icon">&#9201;</span> Liam's Schedule</h1>
       <nav>
         <a href="index.html" class="active">Schedule</a>
         <a href="summary.html">Weekly Summary</a>
       </nav>
-      <div id="navUser" class="nav-user"></div>
+    </div>
+    <div class="navbar-right" id="navUser">
+      <!-- Populated by JS: shows Sign In button or user name + Sign Out -->
     </div>
   </div>
 
   <div class="container">
 
-    <!-- Setup Banner (shown when Firebase is not configured) -->
-    <div class="setup-banner" id="setupBanner" style="display:none;">
-      <h3>Firebase Setup Required</h3>
-      <p>To enable multi-user access, configure Firebase in <code>app.js</code>. See the README for step-by-step instructions.</p>
-    </div>
-
     <!-- Add Entry Card -->
     <div class="card">
       <div class="card-header">
         <h2>Time Slots</h2>
-        <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()">+ Add New Slot</button>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button class="toggle-btn" id="toggleFormBtn" onclick="toggleForm()" style="display:none;">+ Add New Slot</button>
+        </div>
       </div>
 
       <div class="form-section" id="entryForm">
         <div class="form-grid">
-          <!-- Date -->
           <div class="form-group">
             <label>Date</label>
             <input type="text" id="entryDate" placeholder="Pick a date..." readonly>
           </div>
-          <!-- Day (auto) -->
           <div class="form-group">
             <label>Day</label>
             <input type="text" id="entryDay" readonly placeholder="Auto-filled">
           </div>
-          <!-- Start Time -->
           <div class="form-group">
             <label>Start Time</label>
             <div class="time-row">
@@ -493,7 +55,6 @@
               <select id="startAmpm"><option>AM</option><option>PM</option></select>
             </div>
           </div>
-          <!-- End Time -->
           <div class="form-group">
             <label>End Time</label>
             <div class="time-row">
@@ -503,12 +64,10 @@
               <select id="endAmpm"><option>AM</option><option>PM</option></select>
             </div>
           </div>
-          <!-- Hours (auto) -->
           <div class="form-group">
             <label>Hours</label>
             <div class="hours-display" id="hoursDisplay">0</div>
           </div>
-          <!-- Type -->
           <div class="form-group">
             <label>Type</label>
             <select id="entryType">
@@ -516,12 +75,10 @@
               <option value="Respite">Respite</option>
             </select>
           </div>
-          <!-- Description -->
           <div class="form-group">
             <label>Description</label>
             <input type="text" id="entryDesc" placeholder="e.g. Field T3">
           </div>
-          <!-- Location -->
           <div class="form-group" style="grid-column: span 2;">
             <label>Location</label>
             <input type="text" id="entryLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
@@ -570,6 +127,29 @@
 
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal" style="display:none;">
+    <div class="modal login-modal">
+      <div class="login-modal-logo">
+        <span class="logo-mark">&#9201;</span>
+        <h3>Liam's <span class="teal">Schedule</span></h3>
+      </div>
+      <p class="login-subtitle">Sign in to view and claim shifts</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com"
+          onkeydown="if(event.key==='Enter') loginUser()">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter') loginUser()">
+      </div>
+      <p id="loginError" class="login-error"></p>
+      <button class="btn btn-primary login-btn-full" onclick="loginUser()">Sign In</button>
+    </div>
+  </div>
 
   <!-- Edit Modal -->
   <div class="modal-overlay" id="editModal" style="display:none;">
@@ -636,10 +216,8 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script>emailjs.init({ publicKey: "uW7q20t4PPQ13A1C4" });</script>
-  <script src="app.js?v=2"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="app.js"></script>
 </body>
-</html>
+          </html>

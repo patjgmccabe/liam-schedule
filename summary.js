@@ -49,12 +49,29 @@ function isAdmin() { return currentUser && currentUser.email === ADMIN_EMAIL; }
 function updateAuthUI() {
   const navUser = document.getElementById("navUser");
   if (!navUser) return;
+  const mainContent = document.getElementById("mainContent");
+  const signinWidget = document.getElementById("signinWidget");
   if (currentUser) {
     const name = currentUser.displayName || currentUser.email.split("@")[0];
     navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="logoutUser()">Sign Out</button>';
+    if (mainContent) mainContent.style.display = "block";
+    if (signinWidget) signinWidget.style.display = "none";
   } else {
-    navUser.innerHTML = '<a href="index.html" class="btn-login">Sign In</a>';
+    navUser.innerHTML = "";
+    if (mainContent) mainContent.style.display = "none";
+    if (signinWidget) signinWidget.style.display = "flex";
   }
+}
+
+function loginWidget() {
+  const email = document.getElementById("widgetEmail").value.trim();
+  const password = document.getElementById("widgetPassword").value;
+  const errEl = document.getElementById("widgetError");
+  errEl.textContent = "";
+  if (!email || !password) { errEl.textContent = "Please enter your email and password."; return; }
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => { showToast("Welcome back!", "success"); })
+    .catch(() => { errEl.textContent = "Incorrect email or password. Please try again."; });
 }
 
 function logoutUser() { firebase.auth().signOut().then(() => { showToast("You've been signed out.", "info"); }); }

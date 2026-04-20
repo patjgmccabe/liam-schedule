@@ -73,17 +73,20 @@ function updateAuthUI() {
   const addBtn = document.getElementById("toggleFormBtn");
   const mainContent = document.getElementById("mainContent");
   const signinWidget = document.getElementById("signinWidget");
+  const navLinks = document.getElementById("navLinks");
   if (currentUser) {
     const name = getDisplayName();
     navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="logoutUser()">Sign Out</button>';
     if (addBtn) addBtn.style.display = isAdmin() ? "inline-flex" : "none";
     if (mainContent) mainContent.style.display = "block";
     if (signinWidget) signinWidget.style.display = "none";
+    if (navLinks) navLinks.style.display = "";
   } else {
     navUser.innerHTML = "";
     if (addBtn) addBtn.style.display = "none";
     if (mainContent) mainContent.style.display = "none";
     if (signinWidget) signinWidget.style.display = "flex";
+    if (navLinks) navLinks.style.display = "none";
   }
 }
 

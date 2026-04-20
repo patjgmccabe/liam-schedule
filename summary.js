@@ -51,15 +51,18 @@ function updateAuthUI() {
   if (!navUser) return;
   const mainContent = document.getElementById("mainContent");
   const signinWidget = document.getElementById("signinWidget");
+  const navLinks = document.getElementById("navLinks");
   if (currentUser) {
     const name = currentUser.displayName || currentUser.email.split("@")[0];
     navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="logoutUser()">Sign Out</button>';
     if (mainContent) mainContent.style.display = "block";
     if (signinWidget) signinWidget.style.display = "none";
+    if (navLinks) navLinks.style.display = "";
   } else {
     navUser.innerHTML = "";
     if (mainContent) mainContent.style.display = "none";
     if (signinWidget) signinWidget.style.display = "flex";
+    if (navLinks) navLinks.style.display = "none";
   }
 }
 

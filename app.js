@@ -207,7 +207,7 @@ function addTaskRow(containerId, task) {
   const goalOpts = '<option value="">— No goal linked —</option>' +
     GOALS.map(function(g) {
       const sel = task && task.goalId === g.id ? " selected" : "";
-      return '<option value="' + g.id + '"' + sel + '>[' + g.type + '] ' + g.outcome + '</option>';
+      return '<option value="' + g.id + '"' + sel + '>[' + (g.type === "HG" ? "Goal" : g.type) + '] ' + g.outcome + '</option>';
     }).join("");
   row.innerHTML =
     '<div class="task-row-top">' +
@@ -394,7 +394,7 @@ function viewEntry(id) {
           : '') +
           (goal ?
             '<div class="view-goal-header" style="margin-top:' + (hasNotes ? '1.1rem' : '0.85rem') + ';margin-bottom:0;">' +
-              '<span class="goal-type-badge goal-type-' + goal.type.toLowerCase() + '">' + goal.type + '</span>' +
+              '<span class="goal-type-badge goal-type-' + goal.type.toLowerCase() + '">' + (goal.type === "HG" ? "Goal" : goal.type) + '</span>' +
               '<span class="view-goal-outcome">' + goal.outcome + '</span>' +
             '</div>'
           : (!hasNotes ? '<p class="view-goal-text" style="color:var(--text-secondary);margin-top:0.5rem;font-style:italic;">No goal or notes linked</p>' : '')) +

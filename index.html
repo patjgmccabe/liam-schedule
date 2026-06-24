@@ -107,7 +107,14 @@
             <input type="text" id="entryLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
           </div>
         </div>
-        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+
+        <!-- Goals Selector -->
+        <div class="goal-selector-wrap">
+          <label>Goals for This Activity <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);">(select all that apply)</span></label>
+          <div id="goalCheckboxes" class="goal-checkbox-grid"></div>
+        </div>
+
+        <div style="margin-top:1.25rem; display:flex; gap:0.5rem;">
           <button class="btn btn-primary" onclick="addEntry()">Add Time Slot</button>
           <button class="btn btn-outline" onclick="toggleForm()">Cancel</button>
         </div>
@@ -133,6 +140,7 @@
               <th>Type</th>
               <th>Description</th>
               <th>Location</th>
+              <th>Goals</th>
               <th>Claimed By</th>
               <th>Status</th>
               <th>Hours</th>
@@ -140,7 +148,7 @@
             </tr>
           </thead>
           <tbody id="scheduleBody">
-            <tr><td colspan="10" class="empty-state"><p>Loading schedule...</p></td></tr>
+            <tr><td colspan="11" class="empty-state"><p>Loading schedule...</p></td></tr>
           </tbody>
         </table>
       </div>
@@ -227,11 +235,31 @@
           <label>Location</label>
           <input type="text" id="editLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
         </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <div class="goal-selector-wrap" style="margin-top:0;">
+            <label>Goals for This Activity <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);">(select all that apply)</span></label>
+            <div id="editGoalCheckboxes" class="goal-checkbox-grid"></div>
+          </div>
+        </div>
       </div>
-      <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+      <div style="margin-top:1.25rem; display:flex; gap:0.5rem;">
         <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
         <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- View Details Modal -->
+  <div class="modal-overlay" id="viewModal" style="display:none;">
+    <div class="modal view-modal">
+      <div class="modal-header">
+        <h2>Activity Details</h2>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button class="btn btn-outline" onclick="printEntry()" style="padding:0.38rem 0.9rem;font-size:0.82rem;">&#128438; Print</button>
+          <button class="modal-close" onclick="closeViewModal()">&#x2715;</button>
+        </div>
+      </div>
+      <div id="viewModalContent"></div>
     </div>
   </div>
 
@@ -243,4 +271,4 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="app.js"></script>
 </body>
-          </html>
+</html>

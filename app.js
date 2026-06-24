@@ -396,9 +396,7 @@ function viewEntry(id) {
             '<div class="view-goal-header" style="margin-top:' + (hasNotes ? '1.1rem' : '0.85rem') + ';margin-bottom:0;">' +
               '<span class="goal-type-badge goal-type-' + goal.type.toLowerCase() + '">' + goal.type + '</span>' +
               '<span class="view-goal-outcome">' + goal.outcome + '</span>' +
-            '</div>' +
-            '<p class="view-goal-label" style="margin-top:0.75rem;">General Methods / Staff Supports</p>' +
-            '<p class="view-goal-text">' + goal.method + '</p>'
+            '</div>'
           : (!hasNotes ? '<p class="view-goal-text" style="color:var(--text-secondary);margin-top:0.5rem;font-style:italic;">No goal or notes linked</p>' : '')) +
           '</div>';
       }).join("") +

@@ -39,10 +39,10 @@ let authReady = false;
 
 /* ===== Seed Data ===== */
 const SEED_DATA = [
-  { date: "2025-04-26", day: "Saturday", startTime: "10:00 AM", endTime: "11:15 AM", description: "Field T3", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1.25, goals: [] },
+  { date: "2025-04-26", day: "Saturday", startTime: "10:00 AM", endTime: "11:15 AM",location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1.25, goals: [] },
   { date: "2025-04-26", day: "Saturday", startTime: "11:15 AM", endTime: "12:30 PM", description: "", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1.25, goals: [] },
-  { date: "2025-04-26", day: "Saturday", startTime: "12:30 PM", endTime: "1:30 PM", description: "Field 8", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1, goals: [] },
-  { date: "2025-05-10", day: "Saturday", startTime: "12:30 PM", endTime: "1:30 PM", description: "Field 8", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1, goals: [] },
+  { date: "2025-04-26", day: "Saturday", startTime: "12:30 PM", endTime: "1:30 PM",location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1, goals: [] },
+  { date: "2025-05-10", day: "Saturday", startTime: "12:30 PM", endTime: "1:30 PM",location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1, goals: [] },
   { date: "2025-05-10", day: "Saturday", startTime: "1:30 PM", endTime: "2:30 PM", description: "", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1, goals: [] },
   { date: "2025-05-11", day: "Sunday", startTime: "4:30 PM", endTime: "6:00 PM", description: "", location: "Beth's House", claimedBy: "Kelly", hours: 1.5, goals: [] },
   { date: "2025-05-11", day: "Sunday", startTime: "6:00 PM", endTime: "7:30 PM", description: "", location: "Beth's House", claimedBy: "Aidan", hours: 1.5, goals: [] },
@@ -250,7 +250,6 @@ function addEntry() {
   const day = document.getElementById("entryDay").value;
   const startTime = getTimeValue("start"); const endTime = getTimeValue("end");
   const type = document.getElementById("entryType").value;
-  const desc = document.getElementById("entryDesc").value.trim();
   const location = document.getElementById("entryLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
   const tasks = getTasksFromContainer("taskList");
@@ -259,10 +258,10 @@ function addEntry() {
   if (!location) { showToast("Please enter a location.", "error"); return; }
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-  const entry = { date: dateISO, day, startTime, endTime, type, description: desc, location, claimedBy: "", hours, tasks, createdAt: Date.now() };
+  const entry = { date: dateISO, day, startTime, endTime, type, location, claimedBy: "", hours, tasks, createdAt: Date.now() };
   const id = generateId();
   if (firebaseReady) { entriesRef.child(id).set(entry).then(() => showToast("Time slot added!", "success")); } else { allEntries[id] = entry; saveToLocalStorage(); renderTable(); showToast("Time slot added!", "success"); }
-  document.getElementById("entryDate").value = ""; document.getElementById("entryDay").value = ""; document.getElementById("entryDesc").value = ""; document.getElementById("entryLocation").value = "";
+  document.getElementById("entryDate").value = ""; document.getElementById("entryDay").value = ""; document.getElementById("entryLocation").value = "";
   toggleForm();
 }
 
@@ -354,7 +353,6 @@ function renderTable() {
       '<td>' + entry.day + '</td>' +
       '<td style="white-space:nowrap;">' + timeSlot + '</td>' +
       '<td>' + (entry.type || "") + '</td>' +
-      '<td>' + (entry.description || "") + '</td>' +
       '<td>' + entry.location + '</td>' +
       '<td>' + taskCell + '</td>' +
       '<td>' + claimCell + '</td>' +
@@ -363,7 +361,7 @@ function renderTable() {
       '<td>' + actionCell + '</td>' +
       '</tr>';
   });
-  if (visibleCount === 0) { html = '<tr><td colspan="11" class="empty-state"><p>' + (showPast ? "No entries found." : "No upcoming shifts. Check back soon!") + '</p></td></tr>'; }
+  if (visibleCount === 0) { html = '<tr><td colspan="10" class="empty-state"><p>' + (showPast ? "No entries found." : "No upcoming shifts. Check back soon!") + '</p></td></tr>'; }
   tbody.innerHTML = html;
   document.getElementById("entryCount").textContent = visibleCount + " entries";
 }
@@ -419,7 +417,6 @@ function viewEntry(id) {
         '<div class="view-meta-item"><span class="view-meta-label">Hours</span><span class="view-meta-value view-meta-hours">' + entry.hours + '</span></div>' +
         '<div class="view-meta-item"><span class="view-meta-label">Type</span><span class="view-meta-value">' + (entry.type || "—") + '</span></div>' +
         '<div class="view-meta-item" style="grid-column:span 2;"><span class="view-meta-label">Location</span><span class="view-meta-value">' + entry.location + '</span></div>' +
-        (entry.description ? '<div class="view-meta-item" style="grid-column:span 2;"><span class="view-meta-label">Description</span><span class="view-meta-value">' + entry.description + '</span></div>' : '') +
         '<div class="view-meta-item"><span class="view-meta-label">Worker</span><span class="view-meta-value">' + (entry.claimedBy || '<em style="color:rgba(255,255,255,0.4)">Unclaimed</em>') + '</span></div>' +
       '</div>' +
     '</div>' +
@@ -579,7 +576,6 @@ function editEntry(id) {
   document.getElementById("editDay").value = entry.day;
   setTimeSelects("editStart", entry.startTime); setTimeSelects("editEnd", entry.endTime);
   document.getElementById("editType").value = entry.type || "Com Hab";
-  document.getElementById("editDesc").value = entry.description || "";
   document.getElementById("editLocation").value = entry.location || "";
   recalcEditHours();
   renderTaskInputs("editTaskList", entry.tasks || []);
@@ -594,7 +590,6 @@ function saveEdit() {
   const day = document.getElementById("editDay").value;
   const startTime = getEditTimeValue("editStart"); const endTime = getEditTimeValue("editEnd");
   const type = document.getElementById("editType").value;
-  const desc = document.getElementById("editDesc").value.trim();
   const location = document.getElementById("editLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
   const tasks = getTasksFromContainer("editTaskList");
@@ -603,7 +598,7 @@ function saveEdit() {
   if (!location) { showToast("Please enter a location.", "error"); return; }
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-  const updates = { date: dateISO, day, startTime, endTime, type, description: desc, location, hours, tasks };
+  const updates = { date: dateISO, day, startTime, endTime, type, location, hours, tasks };
   if (firebaseReady) { entriesRef.child(editingId).update(updates).then(() => showToast("Time slot updated!", "success")); } else { Object.assign(allEntries[editingId], updates); saveToLocalStorage(); renderTable(); showToast("Time slot updated!", "success"); }
   closeEditModal();
 }

@@ -116,9 +116,13 @@ function entryHasPassed(entry) {
 }
 
 /* ===== Render Summary ===== */
+const TOTALS_SINCE = "2026-07-01";
+
 function renderSummary() {
   const entriesWithIds = Object.entries(allEntries);
   const claimed = entriesWithIds.filter(([id, e]) => e.claimedBy && e.claimedBy.trim() !== "" && entryHasPassed(e));
+
+  // Build week buckets from all history
   const weeks = {};
   claimed.forEach(([id, entry]) => {
     const monday = getWeekMonday(entry.date);
@@ -127,9 +131,12 @@ function renderSummary() {
     weeks[key].entryIds.push(id);
     if (PARTICIPANTS.includes(entry.claimedBy)) { weeks[key].participants[entry.claimedBy] += entry.hours; }
   });
-  const sortedWeeks = Object.entries(weeks).sort((a, b) => a[0].localeCompare(b[0]));
-  const grandTotals = {};
-  PARTICIPANTS.forEach(p => grandTotals[p] = 0);
+
+  // 5 most recent weeks, newest on top
+  const sortedWeeks = Object.entries(weeks).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 5);
+
+  const weekTotals = {};
+  PARTICIPANTS.forEach(p => weekTotals[p] = 0);
   const tbody = document.getElementById("summaryBody");
   let html = "";
   if (sortedWeeks.length === 0) {
@@ -140,7 +147,7 @@ function renderSummary() {
       html += "<tr>";
       html += '<td style="white-space:nowrap; font-weight:600;">' + formatWeekRange(week.monday) + '</td>';
       PARTICIPANTS.forEach(p => {
-        const hrs = week.participants[p]; weekTotal += hrs; grandTotals[p] += hrs;
+        const hrs = week.participants[p]; weekTotal += hrs; weekTotals[p] += hrs;
         html += '<td>' + (hrs > 0 ? hrs : '\u2013') + '</td>';
       });
       html += '<td class="week-total">' + (Math.round(weekTotal * 100) / 100) + '</td>';
@@ -148,12 +155,19 @@ function renderSummary() {
       html += '<td>' + delBtn + '</td>';
       html += "</tr>";
     });
-    let grandTotal = 0;
-    html += '<tr class="total-row"><td>Grand Total</td>';
-    PARTICIPANTS.forEach(p => { const t = Math.round(grandTotals[p] * 100) / 100; grandTotal += t; html += '<td>' + (t > 0 ? t : '\u2013') + '</td>'; });
-    html += '<td>' + (Math.round(grandTotal * 100) / 100) + '</td><td></td></tr>';
+    let weekGrand = 0;
+    html += '<tr class="total-row"><td>5-Week Total</td>';
+    PARTICIPANTS.forEach(p => { const t = Math.round(weekTotals[p] * 100) / 100; weekGrand += t; html += '<td>' + (t > 0 ? t : '\u2013') + '</td>'; });
+    html += '<td>' + (Math.round(weekGrand * 100) / 100) + '</td><td></td></tr>';
   }
   tbody.innerHTML = html;
+
+  // Overall totals: only count entries on or after TOTALS_SINCE
+  const grandTotals = {};
+  PARTICIPANTS.forEach(p => grandTotals[p] = 0);
+  claimed.filter(([id, e]) => e.date >= TOTALS_SINCE).forEach(([id, entry]) => {
+    if (PARTICIPANTS.includes(entry.claimedBy)) { grandTotals[entry.claimedBy] += entry.hours; }
+  });
   renderTotalCards(grandTotals);
 }
 

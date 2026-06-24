@@ -214,6 +214,7 @@ function addTaskRow(containerId, task) {
     '<select class="task-goal-select">' + goalOpts + '</select>' +
     '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>';
   container.appendChild(row);
+  row.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function getTasksFromContainer(containerId) {

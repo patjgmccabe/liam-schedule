@@ -333,9 +333,14 @@ tbody tr.past-date td { background: #fafafa; }
   tbody td, thead th { padding: 0.5rem 0.5rem; }
   .nav-user-name { display: none; }
 }
+@media (max-width: 540px) {
+  .task-row { flex-wrap: wrap; }
+  .task-name-input { flex: none; width: 100%; }
+  .task-goal-select { flex: 1; min-width: 0; max-width: none; }
+}
 @media (max-width: 480px) {
   .form-grid { grid-template-columns: 1fr; }
   .time-row select { min-width: 52px; font-size: 0.85rem; }
   .navbar { flex-direction: row; }
   .navbar h1 .logo-icon { display: none; }
-    }
+}

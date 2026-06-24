@@ -210,9 +210,12 @@ function addTaskRow(containerId, task) {
       return '<option value="' + g.id + '"' + sel + '>[' + g.type + '] ' + g.outcome + '</option>';
     }).join("");
   row.innerHTML =
-    '<input type="text" class="task-name-input" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
-    '<select class="task-goal-select">' + goalOpts + '</select>' +
-    '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>';
+    '<div class="task-row-top">' +
+      '<input type="text" class="task-name-input" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
+      '<select class="task-goal-select">' + goalOpts + '</select>' +
+      '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>' +
+    '</div>' +
+    '<textarea class="task-notes-input" placeholder="Staff notes for this specific task (optional)...">' + (task && task.notes ? escapeHtml(task.notes) : "") + '</textarea>';
   container.appendChild(row);
   row.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -224,7 +227,9 @@ function getTasksFromContainer(containerId) {
   container.querySelectorAll(".task-row").forEach(function(row) {
     const name = row.querySelector(".task-name-input").value.trim();
     const goalId = parseInt(row.querySelector(".task-goal-select").value) || null;
-    if (name) tasks.push({ name: name, goalId: goalId });
+    const notesEl = row.querySelector(".task-notes-input");
+    const notes = notesEl ? notesEl.value.trim() : "";
+    if (name) tasks.push({ name: name, goalId: goalId, notes: notes || null });
   });
   return tasks;
 }
@@ -378,16 +383,21 @@ function viewEntry(id) {
       '<div class="view-goals-list">' +
       entryTasks.map(function(task) {
         const goal = task.goalId ? GOALS.find(function(g) { return g.id === task.goalId; }) : null;
+        const hasNotes = task.notes && task.notes.trim();
         return '<div class="view-task-card' + (goal ? ' view-goal-' + goal.type.toLowerCase() : '') + '">' +
           '<div class="view-task-name">' + escapeHtml(task.name) + '</div>' +
+          (hasNotes ?
+            '<p class="view-goal-label" style="margin-top:0.85rem;">Staff Notes</p>' +
+            '<p class="view-goal-text view-task-notes-text">' + escapeHtml(task.notes).replace(/\n/g, "<br>") + '</p>'
+          : '') +
           (goal ?
-            '<div class="view-goal-header" style="margin-top:0.85rem;margin-bottom:0;">' +
+            '<div class="view-goal-header" style="margin-top:' + (hasNotes ? '1.1rem' : '0.85rem') + ';margin-bottom:0;">' +
               '<span class="goal-type-badge goal-type-' + goal.type.toLowerCase() + '">' + goal.type + '</span>' +
               '<span class="view-goal-outcome">' + goal.outcome + '</span>' +
             '</div>' +
-            '<p class="view-goal-label" style="margin-top:0.75rem;">Methods / Staff Supports</p>' +
+            '<p class="view-goal-label" style="margin-top:0.75rem;">General Methods / Staff Supports</p>' +
             '<p class="view-goal-text">' + goal.method + '</p>'
-          : '<p class="view-goal-text" style="color:var(--text-secondary);margin-top:0.5rem;font-style:italic;">No goal linked</p>') +
+          : (!hasNotes ? '<p class="view-goal-text" style="color:var(--text-secondary);margin-top:0.5rem;font-style:italic;">No goal or notes linked</p>' : '')) +
           '</div>';
       }).join("") +
       '</div></div>';

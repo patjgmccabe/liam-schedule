@@ -381,11 +381,15 @@ function viewEntry(id) {
     tasksHtml = '<div class="view-goals-section">' +
       '<h3 class="view-goals-title">Tasks &amp; Goals</h3>' +
       '<div class="view-goals-list">' +
-      entryTasks.map(function(task) {
+      entryTasks.map(function(task, i) {
         const goal = task.goalId ? GOALS.find(function(g) { return g.id === task.goalId; }) : null;
         const hasNotes = task.notes && task.notes.trim();
         return '<div class="view-task-card' + (goal ? ' view-goal-' + goal.type.toLowerCase() : '') + '">' +
-          '<div class="view-task-name">' + escapeHtml(task.name) + '</div>' +
+          '<label class="view-task-check-label" for="vtc-' + i + '">' +
+            '<input type="checkbox" id="vtc-' + i + '" class="view-task-check">' +
+            '<span class="view-task-check-box">&#10003;</span>' +
+            '<span class="view-task-name">' + escapeHtml(task.name) + '</span>' +
+          '</label>' +
           (hasNotes ?
             '<p class="view-goal-label" style="margin-top:0.85rem;">Staff Notes</p>' +
             '<p class="view-goal-text view-task-notes-text">' + escapeHtml(task.notes).replace(/\n/g, "<br>") + '</p>'
@@ -400,7 +404,9 @@ function viewEntry(id) {
           : (!hasNotes ? '<p class="view-goal-text" style="color:var(--text-secondary);margin-top:0.5rem;font-style:italic;">No goal or notes linked</p>' : '')) +
           '</div>';
       }).join("") +
-      '</div></div>';
+      '</div>' +
+      '<button class="btn btn-send-report" onclick="sendTaskReport(\'' + id + '\')">&#128231; Send Completion Report</button>' +
+      '</div>';
   } else {
     tasksHtml = '<p style="color:var(--text-secondary);font-style:italic;margin-top:1rem;">No tasks assigned to this activity.</p>';
   }
@@ -424,6 +430,40 @@ function viewEntry(id) {
 }
 
 function closeViewModal() { document.getElementById("viewModal").style.display = "none"; }
+
+function sendTaskReport(entryId) {
+  const entry = allEntries[entryId];
+  if (!entry) return;
+  const workerName = getDisplayName() || "Staff";
+  const dateStr = formatDateDisplay(entry.date);
+  const tasks = entry.tasks || [];
+  let doneCount = 0;
+  const taskLines = tasks.map(function(task, i) {
+    const cb = document.getElementById("vtc-" + i);
+    const done = cb && cb.checked;
+    if (done) doneCount++;
+    return (done ? "✓ DONE    " : "□ PENDING ") + task.name;
+  }).join("\n");
+  const subject = "Task Report – Liam – " + dateStr + " " + entry.startTime;
+  const body =
+    "TASK COMPLETION REPORT\n" +
+    "======================\n\n" +
+    "Worker:    " + workerName + "\n" +
+    "Date:      " + dateStr + " (" + entry.day + ")\n" +
+    "Time:      " + entry.startTime + " – " + entry.endTime + "\n" +
+    "Location:  " + entry.location + "\n\n" +
+    "COMPLETED: " + doneCount + " of " + tasks.length + " tasks\n" +
+    "----------------------\n" +
+    taskLines + "\n\n" +
+    "----------------------\n" +
+    "Sent from Liam’s Schedule App";
+  const a = document.createElement("a");
+  a.href = "mailto:patjg.mccabe@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast("Opening email...", "info");
+}
 
 function printEntry() {
   const content = document.getElementById("viewModalContent");

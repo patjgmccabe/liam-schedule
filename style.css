@@ -253,8 +253,52 @@ tbody tr.past-date td { background: #fafafa; }
 .login-modal .form-group label { font-size: 0.8rem; margin-bottom: 0.35rem; }
 .login-modal .form-group input { padding: 0.65rem 0.85rem; font-size: 0.95rem; border-radius: 8px; width: 100%; }
 .login-btn-full { width: 100%; padding: 0.75rem; font-size: 0.95rem; margin-top: 0.5rem; }
-.signin-widget-wrapper { display: flex; justify-content: center; align-items: flex-start; padding: 3rem 1rem; }
+.signin-widget-wrapper { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 58px); padding: 2rem 1rem; width: 100%; }
 .signin-widget-card { box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
+
+/* ===== Goal Type Badges ===== */
+.goal-type-badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 50px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; flex-shrink: 0; }
+.goal-type-hg { background: #d1fae5; color: #065f46; }
+.goal-type-ss { background: #fef3c7; color: #92400e; }
+
+/* ===== Goal Checkbox Cards ===== */
+.goal-selector-wrap { margin-top: 1rem; }
+.goal-selector-wrap > label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem; }
+.goal-checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.45rem; }
+.goal-check-card { display: flex; align-items: center; gap: 0.55rem; padding: 0.6rem 0.85rem; border: 1.5px solid var(--border); border-radius: 9px; cursor: pointer; transition: all 0.15s; background: #f8fafc; user-select: none; }
+.goal-check-card:hover { border-color: var(--teal); background: var(--teal-glow); }
+.goal-check-card.selected { border-color: var(--teal); background: var(--teal-glow); }
+.goal-check-card input { accent-color: var(--teal); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.goal-check-outcome { font-size: 0.82rem; font-weight: 500; color: var(--text); line-height: 1.3; }
+
+/* ===== Goal Mini Badges (table) ===== */
+.goal-mini-badge { display: inline-block; padding: 0.15rem 0.45rem; border-radius: 50px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.goal-mini-hg { background: #d1fae5; color: #065f46; }
+.goal-mini-ss { background: #fef3c7; color: #92400e; }
+
+/* ===== View Button ===== */
+.btn-view { background: var(--primary-light); color: var(--teal-dark); border: 1.5px solid rgba(45,212,168,0.3); font-size: 0.78rem; padding: 0.32rem 0.65rem; }
+.btn-view:hover { background: var(--teal); color: var(--navy); }
+
+/* ===== View Details Modal ===== */
+.view-modal { max-width: 620px; }
+.view-entry-header { background: linear-gradient(135deg, #0b1628 0%, #132040 100%); border-radius: 10px; padding: 1.25rem 1.4rem; margin-bottom: 1.5rem; }
+.view-entry-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.view-meta-item { display: flex; flex-direction: column; gap: 0.12rem; }
+.view-meta-label { font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.45); }
+.view-meta-value { font-size: 0.92rem; font-weight: 600; color: #fff; }
+.view-meta-hours { font-size: 1.25rem; font-weight: 800; color: var(--teal); }
+.view-goals-section { }
+.view-goals-title { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--navy); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+.view-goals-title::before { content: ""; display: inline-block; width: 3px; height: 13px; background: var(--teal); border-radius: 2px; }
+.view-goals-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.view-goal-card { border-radius: 10px; padding: 1.1rem 1.2rem; border: 1px solid transparent; }
+.view-goal-hg { background: #f0fdf4; border-color: #bbf7d0; border-left: 4px solid #10b981; }
+.view-goal-ss { background: #fffbeb; border-color: #fde68a; border-left: 4px solid #f59e0b; }
+.view-goal-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem; }
+.view-goal-outcome { font-weight: 700; font-size: 0.95rem; color: var(--navy); }
+.view-goal-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.2rem; }
+.view-goal-text { font-size: 0.87rem; color: var(--text); line-height: 1.65; }
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {

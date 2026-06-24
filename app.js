@@ -188,31 +188,44 @@ function timeToMinutes(timeStr) {
 function calcHoursBetween(startStr, endStr) { const startMins = timeToMinutes(startStr); let endMins = timeToMinutes(endStr); if (endMins <= startMins) endMins += 24 * 60; return Math.round((endMins - startMins) / 60 * 100) / 100; }
 function recalcHours() { const start = getTimeValue("start"); const end = getTimeValue("end"); const hours = calcHoursBetween(start, end); document.getElementById("hoursDisplay").textContent = hours > 0 ? hours : "0"; }
 
-/* ===== Goal Helpers ===== */
-function renderGoalCheckboxes(containerId, selectedIds) {
+function escapeHtml(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ===== Task Helpers ===== */
+function renderTaskInputs(containerId, tasks) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const sel = selectedIds || [];
-  container.innerHTML = GOALS.map(function(g) {
-    const checked = sel.includes(g.id) ? "checked" : "";
-    const selClass = sel.includes(g.id) ? " selected" : "";
-    return '<label class="goal-check-card' + selClass + '">' +
-      '<input type="checkbox" value="' + g.id + '" ' + checked + '>' +
-      '<span class="goal-type-badge goal-type-' + g.type.toLowerCase() + '">' + g.type + '</span>' +
-      '<span class="goal-check-outcome">' + g.outcome + '</span>' +
-      '</label>';
-  }).join("");
-  container.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
-    cb.addEventListener("change", function() {
-      cb.closest(".goal-check-card").classList.toggle("selected", cb.checked);
-    });
-  });
+  container.innerHTML = "";
+  const list = tasks && tasks.length > 0 ? tasks : [];
+  if (list.length === 0) { addTaskRow(containerId, null); } else { list.forEach(function(t) { addTaskRow(containerId, t); }); }
 }
 
-function getSelectedGoalIds(containerId) {
+function addTaskRow(containerId, task) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const row = document.createElement("div");
+  row.className = "task-row";
+  const goalOpts = '<option value="">— No goal linked —</option>' +
+    GOALS.map(function(g) {
+      const sel = task && task.goalId === g.id ? " selected" : "";
+      return '<option value="' + g.id + '"' + sel + '>[' + g.type + '] ' + g.outcome + '</option>';
+    }).join("");
+  row.innerHTML =
+    '<input type="text" class="task-name-input" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
+    '<select class="task-goal-select">' + goalOpts + '</select>' +
+    '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>';
+  container.appendChild(row);
+}
+
+function getTasksFromContainer(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return [];
-  return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(function(cb) { return parseInt(cb.value); });
+  const tasks = [];
+  container.querySelectorAll(".task-row").forEach(function(row) {
+    const name = row.querySelector(".task-name-input").value.trim();
+    const goalId = parseInt(row.querySelector(".task-goal-select").value) || null;
+    if (name) tasks.push({ name: name, goalId: goalId });
+  });
+  return tasks;
 }
 
 /* ===== Form Toggle ===== */
@@ -221,7 +234,7 @@ function toggleForm() {
   const form = document.getElementById("entryForm"); const btn = document.getElementById("toggleFormBtn");
   form.classList.toggle("open"); btn.classList.toggle("active");
   btn.textContent = form.classList.contains("open") ? "Cancel" : "+ Add New Slot";
-  if (form.classList.contains("open")) { renderGoalCheckboxes("goalCheckboxes", []); }
+  if (form.classList.contains("open")) { renderTaskInputs("taskList", []); }
 }
 
 /* ===== Add Entry (Admin Only) ===== */
@@ -234,13 +247,13 @@ function addEntry() {
   const desc = document.getElementById("entryDesc").value.trim();
   const location = document.getElementById("entryLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
-  const goals = getSelectedGoalIds("goalCheckboxes");
+  const tasks = getTasksFromContainer("taskList");
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
   if (!location) { showToast("Please enter a location.", "error"); return; }
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-  const entry = { date: dateISO, day, startTime, endTime, type, description: desc, location, claimedBy: "", hours, goals, createdAt: Date.now() };
+  const entry = { date: dateISO, day, startTime, endTime, type, description: desc, location, claimedBy: "", hours, tasks, createdAt: Date.now() };
   const id = generateId();
   if (firebaseReady) { entriesRef.child(id).set(entry).then(() => showToast("Time slot added!", "success")); } else { allEntries[id] = entry; saveToLocalStorage(); renderTable(); showToast("Time slot added!", "success"); }
   document.getElementById("entryDate").value = ""; document.getElementById("entryDay").value = ""; document.getElementById("entryDesc").value = ""; document.getElementById("entryLocation").value = "";
@@ -301,15 +314,12 @@ function renderTable() {
     const timeSlot = entry.startTime + " – " + entry.endTime;
     const statusBadge = isPast ? '<span class="badge badge-passed">Past</span>' : entry.claimedBy ? '<span class="badge badge-claimed">Claimed</span>' : '<span class="badge badge-available">Available</span>';
 
-    const entryGoals = entry.goals || [];
-    let goalCell = "";
-    if (entryGoals.length > 0) {
-      const hgCount = entryGoals.filter(function(gid) { const g = GOALS.find(function(x) { return x.id === gid; }); return g && g.type === "HG"; }).length;
-      const ssCount = entryGoals.filter(function(gid) { const g = GOALS.find(function(x) { return x.id === gid; }); return g && g.type === "SS"; }).length;
-      if (hgCount > 0) goalCell += '<span class="goal-mini-badge goal-mini-hg">HG×' + hgCount + '</span> ';
-      if (ssCount > 0) goalCell += '<span class="goal-mini-badge goal-mini-ss">SS×' + ssCount + '</span>';
+    const entryTasks = entry.tasks || [];
+    let taskCell = "";
+    if (entryTasks.length > 0) {
+      taskCell = '<span class="task-count-badge">' + entryTasks.length + ' task' + (entryTasks.length !== 1 ? "s" : "") + '</span>';
     } else {
-      goalCell = '<span style="color:var(--text-secondary);font-size:0.75rem">—</span>';
+      taskCell = '<span style="color:var(--text-secondary);font-size:0.75rem">—</span>';
     }
 
     let claimCell; const myName = getDisplayName();
@@ -340,7 +350,7 @@ function renderTable() {
       '<td>' + (entry.type || "") + '</td>' +
       '<td>' + (entry.description || "") + '</td>' +
       '<td>' + entry.location + '</td>' +
-      '<td>' + goalCell + '</td>' +
+      '<td>' + taskCell + '</td>' +
       '<td>' + claimCell + '</td>' +
       '<td>' + statusBadge + '</td>' +
       '<td style="text-align:center; font-weight:700;">' + entry.hours + '</td>' +
@@ -357,31 +367,31 @@ function formatDateDisplay(isoDate) { const parts = isoDate.split("-"); return p
 /* ===== View Entry Modal ===== */
 function viewEntry(id) {
   const entry = allEntries[id]; if (!entry) return;
-  const entryGoals = (entry.goals || []).map(function(gid) { return GOALS.find(function(g) { return g.id === gid; }); }).filter(Boolean);
+  const entryTasks = entry.tasks || [];
   const dateStr = formatDateDisplay(entry.date);
 
-  let goalsHtml = "";
-  if (entryGoals.length > 0) {
-    goalsHtml = '<div class="view-goals-section">' +
-      '<h3 class="view-goals-title">Goals &amp; Methods</h3>' +
+  let tasksHtml = "";
+  if (entryTasks.length > 0) {
+    tasksHtml = '<div class="view-goals-section">' +
+      '<h3 class="view-goals-title">Tasks &amp; Goals</h3>' +
       '<div class="view-goals-list">' +
-      entryGoals.map(function(g) {
-        return '<div class="view-goal-card view-goal-' + g.type.toLowerCase() + '">' +
-          '<div class="view-goal-header">' +
-            '<span class="goal-type-badge goal-type-' + g.type.toLowerCase() + '">' + g.type + '</span>' +
-            '<span class="view-goal-outcome">' + g.outcome + '</span>' +
-          '</div>' +
-          '<div class="view-goal-body">' +
-            '<p class="view-goal-label">Habilitative Goal</p>' +
-            '<p class="view-goal-text">' + g.goal + '</p>' +
+      entryTasks.map(function(task) {
+        const goal = task.goalId ? GOALS.find(function(g) { return g.id === task.goalId; }) : null;
+        return '<div class="view-task-card' + (goal ? ' view-goal-' + goal.type.toLowerCase() : '') + '">' +
+          '<div class="view-task-name">' + escapeHtml(task.name) + '</div>' +
+          (goal ?
+            '<div class="view-goal-header" style="margin-top:0.85rem;margin-bottom:0;">' +
+              '<span class="goal-type-badge goal-type-' + goal.type.toLowerCase() + '">' + goal.type + '</span>' +
+              '<span class="view-goal-outcome">' + goal.outcome + '</span>' +
+            '</div>' +
             '<p class="view-goal-label" style="margin-top:0.75rem;">Methods / Staff Supports</p>' +
-            '<p class="view-goal-text">' + g.method + '</p>' +
-          '</div>' +
-        '</div>';
+            '<p class="view-goal-text">' + goal.method + '</p>'
+          : '<p class="view-goal-text" style="color:var(--text-secondary);margin-top:0.5rem;font-style:italic;">No goal linked</p>') +
+          '</div>';
       }).join("") +
       '</div></div>';
   } else {
-    goalsHtml = '<p style="color:var(--text-secondary);font-style:italic;margin-top:1rem;">No goals assigned to this activity.</p>';
+    tasksHtml = '<p style="color:var(--text-secondary);font-style:italic;margin-top:1rem;">No tasks assigned to this activity.</p>';
   }
 
   const content =
@@ -396,7 +406,7 @@ function viewEntry(id) {
         '<div class="view-meta-item"><span class="view-meta-label">Worker</span><span class="view-meta-value">' + (entry.claimedBy || '<em style="color:rgba(255,255,255,0.4)">Unclaimed</em>') + '</span></div>' +
       '</div>' +
     '</div>' +
-    goalsHtml;
+    tasksHtml;
 
   document.getElementById("viewModalContent").innerHTML = content;
   document.getElementById("viewModal").style.display = "flex";
@@ -521,7 +531,7 @@ function editEntry(id) {
   document.getElementById("editDesc").value = entry.description || "";
   document.getElementById("editLocation").value = entry.location || "";
   recalcEditHours();
-  renderGoalCheckboxes("editGoalCheckboxes", entry.goals || []);
+  renderTaskInputs("editTaskList", entry.tasks || []);
   document.getElementById("editModal").style.display = "flex";
 }
 
@@ -536,13 +546,13 @@ function saveEdit() {
   const desc = document.getElementById("editDesc").value.trim();
   const location = document.getElementById("editLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
-  const goals = getSelectedGoalIds("editGoalCheckboxes");
+  const tasks = getTasksFromContainer("editTaskList");
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
   if (!location) { showToast("Please enter a location.", "error"); return; }
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-  const updates = { date: dateISO, day, startTime, endTime, type, description: desc, location, hours, goals };
+  const updates = { date: dateISO, day, startTime, endTime, type, description: desc, location, hours, tasks };
   if (firebaseReady) { entriesRef.child(editingId).update(updates).then(() => showToast("Time slot updated!", "success")); } else { Object.assign(allEntries[editingId], updates); saveToLocalStorage(); renderTable(); showToast("Time slot updated!", "success"); }
   closeEditModal();
 }

@@ -108,10 +108,13 @@
           </div>
         </div>
 
-        <!-- Goals Selector -->
-        <div class="goal-selector-wrap">
-          <label>Goals for This Activity <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);">(select all that apply)</span></label>
-          <div id="goalCheckboxes" class="goal-checkbox-grid"></div>
+        <!-- Tasks Section -->
+        <div class="task-section">
+          <div class="task-section-header">
+            <label>Tasks for This Activity</label>
+            <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('taskList')">+ Add Task</button>
+          </div>
+          <div id="taskList" class="task-list"></div>
         </div>
 
         <div style="margin-top:1.25rem; display:flex; gap:0.5rem;">
@@ -140,7 +143,7 @@
               <th>Type</th>
               <th>Description</th>
               <th>Location</th>
-              <th>Goals</th>
+              <th>Tasks</th>
               <th>Claimed By</th>
               <th>Status</th>
               <th>Hours</th>
@@ -236,9 +239,12 @@
           <input type="text" id="editLocation" placeholder="e.g. 55 Otsego Avenue Dix Hills">
         </div>
         <div class="form-group" style="grid-column: span 2;">
-          <div class="goal-selector-wrap" style="margin-top:0;">
-            <label>Goals for This Activity <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary);">(select all that apply)</span></label>
-            <div id="editGoalCheckboxes" class="goal-checkbox-grid"></div>
+          <div class="task-section" style="margin-top:0;">
+            <div class="task-section-header">
+              <label>Tasks for This Activity</label>
+              <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('editTaskList')">+ Add Task</button>
+            </div>
+            <div id="editTaskList" class="task-list"></div>
           </div>
         </div>
       </div>

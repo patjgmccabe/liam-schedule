@@ -132,34 +132,41 @@ function renderSummary() {
     if (PARTICIPANTS.includes(entry.claimedBy)) { weeks[key].participants[entry.claimedBy] += entry.hours; }
   });
 
-  // 5 most recent weeks, newest on top
-  const sortedWeeks = Object.entries(weeks).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 5);
+  // 5 most recent calendar weeks (newest first), regardless of whether hours exist
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const currentMonday = getWeekMonday(todayStr);
+  const recentWeeks = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(currentMonday.getTime());
+    d.setDate(d.getDate() - i * 7);
+    const key = d.toISOString().slice(0, 10);
+    const data = weeks[key] || { monday: d, participants: {}, entryIds: [] };
+    PARTICIPANTS.forEach(p => { if (!data.participants[p]) data.participants[p] = 0; });
+    recentWeeks.push([key, data]);
+  }
 
   const weekTotals = {};
   PARTICIPANTS.forEach(p => weekTotals[p] = 0);
   const tbody = document.getElementById("summaryBody");
   let html = "";
-  if (sortedWeeks.length === 0) {
-    html = '<tr><td colspan="8" class="empty-state"><p>No completed shifts yet.</p></td></tr>';
-  } else {
-    sortedWeeks.forEach(([key, week]) => {
-      let weekTotal = 0;
-      html += "<tr>";
-      html += '<td style="white-space:nowrap; font-weight:600;">' + formatWeekRange(week.monday) + '</td>';
-      PARTICIPANTS.forEach(p => {
-        const hrs = week.participants[p]; weekTotal += hrs; weekTotals[p] += hrs;
-        html += '<td>' + (hrs > 0 ? hrs : '\u2013') + '</td>';
-      });
-      html += '<td class="week-total">' + (Math.round(weekTotal * 100) / 100) + '</td>';
-      const delBtn = isAdmin() ? '<button class="btn btn-danger" style="font-size:0.75rem;padding:0.28rem 0.6rem;" onclick="deleteWeek(\'' + key + '\', \'' + formatWeekRange(week.monday) + '\')">' + '\u2715</button>' : '';
-      html += '<td>' + delBtn + '</td>';
-      html += "</tr>";
+  recentWeeks.forEach(([key, week]) => {
+    let weekTotal = 0;
+    html += "<tr>";
+    html += '<td style="white-space:nowrap; font-weight:600;">' + formatWeekRange(week.monday) + '</td>';
+    PARTICIPANTS.forEach(p => {
+      const hrs = week.participants[p] || 0; weekTotal += hrs; weekTotals[p] += hrs;
+      html += '<td>' + (hrs > 0 ? hrs : '\u2013') + '</td>';
     });
-    let weekGrand = 0;
-    html += '<tr class="total-row"><td>5-Week Total</td>';
-    PARTICIPANTS.forEach(p => { const t = Math.round(weekTotals[p] * 100) / 100; weekGrand += t; html += '<td>' + (t > 0 ? t : '\u2013') + '</td>'; });
-    html += '<td>' + (Math.round(weekGrand * 100) / 100) + '</td><td></td></tr>';
-  }
+    html += '<td class="week-total">' + (Math.round(weekTotal * 100) / 100) + '</td>';
+    const hasEntries = week.entryIds && week.entryIds.length > 0;
+    const delBtn = (isAdmin() && hasEntries) ? '<button class="btn btn-danger" style="font-size:0.75rem;padding:0.28rem 0.6rem;" onclick="deleteWeek(\'' + key + '\', \'' + formatWeekRange(week.monday) + '\')">' + '\u2715</button>' : '';
+    html += '<td>' + delBtn + '</td>';
+    html += "</tr>";
+  });
+  let weekGrand = 0;
+  html += '<tr class="total-row"><td>5-Week Total</td>';
+  PARTICIPANTS.forEach(p => { const t = Math.round(weekTotals[p] * 100) / 100; weekGrand += t; html += '<td>' + (t > 0 ? t : '\u2013') + '</td>'; });
+  html += '<td>' + (Math.round(weekGrand * 100) / 100) + '</td><td></td></tr>';
   tbody.innerHTML = html;
 
   // Overall totals: only count entries on or after TOTALS_SINCE

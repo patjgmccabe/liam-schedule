@@ -253,15 +253,16 @@ function addEntry() {
   const location = document.getElementById("entryLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
   const tasks = getTasksFromContainer("taskList");
+  const activityNotes = document.getElementById("entryNotes").value.trim();
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
   if (!location) { showToast("Please enter a location.", "error"); return; }
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-  const entry = { date: dateISO, day, startTime, endTime, type, location, claimedBy: "", hours, tasks, createdAt: Date.now() };
+  const entry = { date: dateISO, day, startTime, endTime, type, location, activityNotes: activityNotes || null, claimedBy: "", hours, tasks, createdAt: Date.now() };
   const id = generateId();
   if (firebaseReady) { entriesRef.child(id).set(entry).then(() => showToast("Time slot added!", "success")); } else { allEntries[id] = entry; saveToLocalStorage(); renderTable(); showToast("Time slot added!", "success"); }
-  document.getElementById("entryDate").value = ""; document.getElementById("entryDay").value = ""; document.getElementById("entryLocation").value = "";
+  document.getElementById("entryDate").value = ""; document.getElementById("entryDay").value = ""; document.getElementById("entryLocation").value = ""; document.getElementById("entryNotes").value = "";
   toggleForm();
 }
 
@@ -407,7 +408,7 @@ function viewEntry(id) {
     tasksHtml = '<p style="color:var(--text-secondary);font-style:italic;margin-top:1rem;">No tasks assigned to this activity.</p>';
   }
 
-  const content =
+  const header =
     '<div class="view-entry-header">' +
       '<div class="view-entry-meta">' +
         '<div class="view-meta-item"><span class="view-meta-label">Date</span><span class="view-meta-value">' + dateStr + ' &mdash; ' + entry.day + '</span></div>' +
@@ -417,10 +418,15 @@ function viewEntry(id) {
         '<div class="view-meta-item" style="grid-column:span 2;"><span class="view-meta-label">Location</span><span class="view-meta-value">' + entry.location + '</span></div>' +
         '<div class="view-meta-item"><span class="view-meta-label">Worker</span><span class="view-meta-value">' + (entry.claimedBy || '<em style="color:rgba(255,255,255,0.4)">Unclaimed</em>') + '</span></div>' +
       '</div>' +
-    '</div>' +
-    tasksHtml;
+    '</div>';
+  const notesHtml = entry.activityNotes
+    ? '<div class="view-activity-notes">' +
+        '<h3 class="view-goals-title">Notes</h3>' +
+        '<p class="view-activity-notes-text">' + escapeHtml(entry.activityNotes).replace(/\n/g, "<br>") + '</p>' +
+      '</div>'
+    : '';
 
-  document.getElementById("viewModalContent").innerHTML = content;
+  document.getElementById("viewModalContent").innerHTML = header + notesHtml + tasksHtml;
   document.getElementById("viewModal").style.display = "flex";
 }
 
@@ -575,6 +581,7 @@ function editEntry(id) {
   setTimeSelects("editStart", entry.startTime); setTimeSelects("editEnd", entry.endTime);
   document.getElementById("editType").value = entry.type || "Com Hab";
   document.getElementById("editLocation").value = entry.location || "";
+  document.getElementById("editNotes").value = entry.activityNotes || "";
   recalcEditHours();
   renderTaskInputs("editTaskList", entry.tasks || []);
   document.getElementById("editModal").style.display = "flex";
@@ -591,12 +598,13 @@ function saveEdit() {
   const location = document.getElementById("editLocation").value.trim();
   const hours = calcHoursBetween(startTime, endTime);
   const tasks = getTasksFromContainer("editTaskList");
+  const activityNotes = document.getElementById("editNotes").value.trim();
   if (!dateInput) { showToast("Please select a date.", "error"); return; }
   if (hours <= 0) { showToast("End time must be after start time.", "error"); return; }
   if (!location) { showToast("Please enter a location.", "error"); return; }
   const dateParts = dateInput.split("-");
   const dateISO = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-  const updates = { date: dateISO, day, startTime, endTime, type, location, hours, tasks };
+  const updates = { date: dateISO, day, startTime, endTime, type, location, activityNotes: activityNotes || null, hours, tasks };
   if (firebaseReady) { entriesRef.child(editingId).update(updates).then(() => showToast("Time slot updated!", "success")); } else { Object.assign(allEntries[editingId], updates); saveToLocalStorage(); renderTable(); showToast("Time slot updated!", "success"); }
   closeEditModal();
 }

@@ -129,7 +129,8 @@ function renderSummary() {
     const key = monday.toISOString().slice(0, 10);
     if (!weeks[key]) { weeks[key] = { monday, participants: {}, entryIds: [] }; PARTICIPANTS.forEach(p => weeks[key].participants[p] = 0); }
     weeks[key].entryIds.push(id);
-    const matchedP = PARTICIPANTS.find(p => p.toLowerCase() === (entry.claimedBy || "").trim().toLowerCase());
+    const cb = (entry.claimedBy || "").trim().toLowerCase();
+    const matchedP = PARTICIPANTS.find(p => { const pl = p.toLowerCase(); return cb === pl || cb.startsWith(pl + " "); });
     if (matchedP) { weeks[key].participants[matchedP] += entry.hours; }
   });
 
@@ -174,7 +175,8 @@ function renderSummary() {
   const grandTotals = {};
   PARTICIPANTS.forEach(p => grandTotals[p] = 0);
   claimed.filter(([id, e]) => e.date >= TOTALS_SINCE).forEach(([id, entry]) => {
-    const matchedP = PARTICIPANTS.find(p => p.toLowerCase() === (entry.claimedBy || "").trim().toLowerCase());
+    const cb = (entry.claimedBy || "").trim().toLowerCase();
+    const matchedP = PARTICIPANTS.find(p => { const pl = p.toLowerCase(); return cb === pl || cb.startsWith(pl + " "); });
     if (matchedP) { grandTotals[matchedP] += entry.hours; }
   });
   renderTotalCards(grandTotals);

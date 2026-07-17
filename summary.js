@@ -129,7 +129,8 @@ function renderSummary() {
     const key = monday.toISOString().slice(0, 10);
     if (!weeks[key]) { weeks[key] = { monday, participants: {}, entryIds: [] }; PARTICIPANTS.forEach(p => weeks[key].participants[p] = 0); }
     weeks[key].entryIds.push(id);
-    if (PARTICIPANTS.includes(entry.claimedBy)) { weeks[key].participants[entry.claimedBy] += entry.hours; }
+    const matchedP = PARTICIPANTS.find(p => p.toLowerCase() === (entry.claimedBy || "").trim().toLowerCase());
+    if (matchedP) { weeks[key].participants[matchedP] += entry.hours; }
   });
 
   // 5 most recent calendar weeks (newest first), regardless of whether hours exist
@@ -173,7 +174,8 @@ function renderSummary() {
   const grandTotals = {};
   PARTICIPANTS.forEach(p => grandTotals[p] = 0);
   claimed.filter(([id, e]) => e.date >= TOTALS_SINCE).forEach(([id, entry]) => {
-    if (PARTICIPANTS.includes(entry.claimedBy)) { grandTotals[entry.claimedBy] += entry.hours; }
+    const matchedP = PARTICIPANTS.find(p => p.toLowerCase() === (entry.claimedBy || "").trim().toLowerCase());
+    if (matchedP) { grandTotals[matchedP] += entry.hours; }
   });
   renderTotalCards(grandTotals);
 }

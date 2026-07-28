@@ -149,7 +149,7 @@ function generateId() { return "e" + Date.now().toString(36) + Math.random().toS
 /* ===== Date Picker (Flatpickr) ===== */
 function initDatePicker() {
   flatpickr("#entryDate", {
-    dateFormat: "m-d-Y", minDate: "today", disableMobile: true,
+    dateFormat: "m-d-Y", disableMobile: true,
     onChange: function(selectedDates) { if (selectedDates.length > 0) { document.getElementById("entryDay").value = DAYS[selectedDates[0].getDay()]; } }
   });
 }

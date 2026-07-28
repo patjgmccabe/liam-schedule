@@ -66,7 +66,7 @@ function initFirebase() {
     entriesRef = db.ref("entries");
     firebaseReady = true;
     initAuth();
-    entriesRef.on("value", (snapshot) => { allEntries = snapshot.val() || {}; if (authReady) renderTable(); });
+    entriesRef.on("value", (snapshot) => { allEntries = snapshot.val() || {}; syncTaskLibrary(); if (authReady) renderTable(); });
     entriesRef.once("value", (snapshot) => { if (!snapshot.exists()) seedData(); });
   } catch (e) { console.error("Firebase init error:", e); loadFromLocalStorage(); }
 }
@@ -134,6 +134,7 @@ function loadFromLocalStorage() {
   authReady = true;
   const stored = localStorage.getItem("liamScheduleEntries");
   if (stored) { allEntries = JSON.parse(stored); } else { seedData(); }
+  syncTaskLibrary();
   renderTable();
 }
 
@@ -190,6 +191,35 @@ function recalcHours() { const start = getTimeValue("start"); const end = getTim
 
 function escapeHtml(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
+/* ===== Task Library (localStorage cache) ===== */
+const TASK_LIB_KEY = "liamTaskLib";
+
+function syncTaskLibrary() {
+  let lib;
+  try { lib = JSON.parse(localStorage.getItem(TASK_LIB_KEY) || "{}"); } catch(e) { lib = {}; }
+  const sorted = Object.values(allEntries).filter(function(e) { return e.tasks && e.tasks.length > 0; });
+  sorted.sort(function(a, b) { return a.date < b.date ? 1 : -1; });
+  sorted.forEach(function(entry) {
+    (entry.tasks || []).forEach(function(task) {
+      if (!task.name || !task.name.trim()) return;
+      const key = task.name.trim().toLowerCase();
+      if (!lib[key] || entry.date > (lib[key].lastDate || "")) {
+        lib[key] = { name: task.name.trim(), goalId: task.goalId || null, notes: task.notes || "", lastDate: entry.date };
+      }
+    });
+  });
+  localStorage.setItem(TASK_LIB_KEY, JSON.stringify(lib));
+}
+
+function getTaskLibrary() {
+  const hidden = getHiddenTasks();
+  let lib;
+  try { lib = JSON.parse(localStorage.getItem(TASK_LIB_KEY) || "{}"); } catch(e) { lib = {}; }
+  return Object.values(lib)
+    .filter(function(t) { return !hidden.has(t.name.toLowerCase()); })
+    .sort(function(a, b) { return (b.lastDate || "") > (a.lastDate || "") ? 1 : -1; });
+}
+
 /* ===== Task Helpers ===== */
 function getPrevTaskMap() {
   const map = {};
@@ -221,8 +251,7 @@ function hideTask(name, btn, containerId) {
 function showPrevTaskPicker(btn, containerId) {
   const existing = document.getElementById("prevTaskPicker");
   if (existing) { existing.remove(); return; }
-  const hidden = getHiddenTasks();
-  const tasks = Object.values(getPrevTaskMap()).filter(function(t) { return !hidden.has(t.name.toLowerCase()); });
+  const tasks = getTaskLibrary();
   if (tasks.length === 0) { showToast("No previous tasks found.", "info"); return; }
 
   const picker = document.createElement("div");

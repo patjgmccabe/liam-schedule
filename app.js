@@ -205,10 +205,24 @@ function getPrevTaskMap() {
   return map;
 }
 
+function getHiddenTasks() {
+  try { return new Set(JSON.parse(localStorage.getItem("liamHiddenTasks") || "[]")); } catch(e) { return new Set(); }
+}
+function hideTask(name, btn, containerId) {
+  const hidden = getHiddenTasks();
+  hidden.add(name.toLowerCase());
+  localStorage.setItem("liamHiddenTasks", JSON.stringify([...hidden]));
+  showToast('"' + name + '" removed from Recent.', "info");
+  // Rebuild picker in place
+  const picker = document.getElementById("prevTaskPicker");
+  if (picker) { picker.remove(); showPrevTaskPicker(btn, containerId); }
+}
+
 function showPrevTaskPicker(btn, containerId) {
   const existing = document.getElementById("prevTaskPicker");
   if (existing) { existing.remove(); return; }
-  const tasks = Object.values(getPrevTaskMap());
+  const hidden = getHiddenTasks();
+  const tasks = Object.values(getPrevTaskMap()).filter(function(t) { return !hidden.has(t.name.toLowerCase()); });
   if (tasks.length === 0) { showToast("No previous tasks found.", "info"); return; }
 
   const picker = document.createElement("div");
@@ -226,9 +240,16 @@ function showPrevTaskPicker(btn, containerId) {
     const item = document.createElement("div");
     item.className = "prev-task-item";
     item.innerHTML =
-      '<div class="prev-task-item-name">' + escapeHtml(t.name) + '</div>' +
+      '<div class="prev-task-item-row">' +
+        '<div class="prev-task-item-name">' + escapeHtml(t.name) + '</div>' +
+        '<button class="prev-task-hide-btn" title="Remove from Recent">&#x2715;</button>' +
+      '</div>' +
       (goal ? '<div class="prev-task-item-goal">' + (goal.type === "HG" ? "Goal" : goal.type) + ': ' + escapeHtml(goal.outcome.length > 45 ? goal.outcome.substring(0, 45) + '…' : goal.outcome) + '</div>' : '') +
       (t.notes ? '<div class="prev-task-item-notes">' + escapeHtml(t.notes.length > 80 ? t.notes.substring(0, 80) + '…' : t.notes) + '</div>' : '');
+    item.querySelector(".prev-task-hide-btn").onclick = function(e) {
+      e.stopPropagation();
+      hideTask(t.name, btn, containerId);
+    };
     item.onclick = function() { addTaskRow(containerId, t); picker.remove(); };
     picker.appendChild(item);
   });

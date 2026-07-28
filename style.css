@@ -338,7 +338,11 @@ tbody tr.past-date td { background: #fafafa; }
 .prev-task-item { padding: 0.65rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.12s; }
 .prev-task-item:last-child { border-bottom: none; }
 .prev-task-item:hover { background: var(--teal-glow); }
-.prev-task-item-name { font-size: 0.88rem; font-weight: 600; color: var(--navy); }
+.prev-task-item-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.prev-task-item-name { font-size: 0.88rem; font-weight: 600; color: var(--navy); flex: 1; }
+.prev-task-hide-btn { background: none; border: none; cursor: pointer; font-size: 0.7rem; color: var(--text-secondary); opacity: 0; padding: 0.1rem 0.3rem; border-radius: 4px; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
+.prev-task-item:hover .prev-task-hide-btn { opacity: 1; }
+.prev-task-hide-btn:hover { color: var(--danger); }
 .prev-task-item-goal { font-size: 0.73rem; color: var(--teal-dark); font-weight: 600; margin-top: 0.2rem; }
 .prev-task-item-notes { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.4; font-style: italic; }
 .btn-recent-tasks { background: none; border: 1.5px solid var(--border); padding: 0.38rem 0.8rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap; }

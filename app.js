@@ -191,6 +191,20 @@ function recalcHours() { const start = getTimeValue("start"); const end = getTim
 function escapeHtml(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 /* ===== Task Helpers ===== */
+function getPrevTaskMap() {
+  const map = {};
+  const sorted = Object.values(allEntries).filter(function(e) { return e.tasks && e.tasks.length > 0; });
+  sorted.sort(function(a, b) { return b.date > a.date ? 1 : -1; });
+  sorted.forEach(function(entry) {
+    (entry.tasks || []).forEach(function(task) {
+      if (!task.name || !task.name.trim()) return;
+      const key = task.name.trim().toLowerCase();
+      if (!map[key]) map[key] = { name: task.name.trim(), goalId: task.goalId || null, notes: task.notes || "" };
+    });
+  });
+  return map;
+}
+
 function renderTaskInputs(containerId, tasks) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -204,6 +218,13 @@ function addTaskRow(containerId, task) {
   if (!container) return;
   const row = document.createElement("div");
   row.className = "task-row";
+
+  const listId = "prevTasks_" + containerId;
+  let dl = document.getElementById(listId);
+  if (!dl) { dl = document.createElement("datalist"); dl.id = listId; document.body.appendChild(dl); }
+  const prevMap = getPrevTaskMap();
+  dl.innerHTML = Object.values(prevMap).map(function(t) { return '<option value="' + escapeHtml(t.name) + '">'; }).join("");
+
   const goalOpts = '<option value="">— No goal linked —</option>' +
     GOALS.map(function(g) {
       const sel = task && task.goalId === g.id ? " selected" : "";
@@ -211,12 +232,22 @@ function addTaskRow(containerId, task) {
     }).join("");
   row.innerHTML =
     '<div class="task-row-top">' +
-      '<input type="text" class="task-name-input" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
+      '<input type="text" class="task-name-input" list="' + listId + '" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
       '<select class="task-goal-select">' + goalOpts + '</select>' +
       '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>' +
     '</div>' +
     '<textarea class="task-notes-input" placeholder="Staff notes for this specific task (optional)...">' + (task && task.notes ? escapeHtml(task.notes) : "") + '</textarea>';
   container.appendChild(row);
+
+  row.querySelector(".task-name-input").addEventListener("change", function() {
+    const match = prevMap[this.value.trim().toLowerCase()];
+    if (!match) return;
+    const sel = row.querySelector(".task-goal-select");
+    if (match.goalId) sel.value = String(match.goalId);
+    const notesEl = row.querySelector(".task-notes-input");
+    if (notesEl && !notesEl.value.trim() && match.notes) notesEl.value = match.notes;
+  });
+
   row.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 

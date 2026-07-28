@@ -434,7 +434,15 @@ function renderTable() {
 
     let claimCell; const myName = getDisplayName();
     if (isPast) {
-      claimCell = entry.claimedBy ? '<span class="claimed-name">' + entry.claimedBy + '</span>' : '<span style="color:var(--text-secondary)">—</span>';
+      if (entry.claimedBy) {
+        claimCell = '<span class="claimed-name">' + entry.claimedBy + '</span>';
+        if (isAdmin()) claimCell += ' <button class="unclaim-btn" onclick="unclaimEntry(\'' + id + '\')">remove</button>';
+      } else if (isAdmin()) {
+        const opts = PARTICIPANTS.map(p => '<option value="' + p + '">' + p + '</option>').join("");
+        claimCell = '<div class="claim-controls"><select id="claim-' + id + '"><option value="">Select...</option>' + opts + '</select><button class="btn btn-success" onclick="claimEntry(\'' + id + '\')">Claim</button></div>';
+      } else {
+        claimCell = '<span style="color:var(--text-secondary)">—</span>';
+      }
     } else if (entry.claimedBy) {
       const canUnclaim = isAdmin() || (myName && entry.claimedBy === myName);
       claimCell = '<span class="claimed-name">' + entry.claimedBy + '</span>';

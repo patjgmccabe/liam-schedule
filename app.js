@@ -205,6 +205,46 @@ function getPrevTaskMap() {
   return map;
 }
 
+function showPrevTaskPicker(btn, containerId) {
+  const existing = document.getElementById("prevTaskPicker");
+  if (existing) { existing.remove(); return; }
+  const tasks = Object.values(getPrevTaskMap());
+  if (tasks.length === 0) { showToast("No previous tasks found.", "info"); return; }
+
+  const picker = document.createElement("div");
+  picker.id = "prevTaskPicker";
+  picker.className = "prev-task-picker";
+
+  const header = document.createElement("div");
+  header.className = "prev-task-picker-header";
+  header.innerHTML = 'Previous Tasks <span class="prev-task-picker-close">&#x2715;</span>';
+  header.querySelector(".prev-task-picker-close").onclick = function() { picker.remove(); };
+  picker.appendChild(header);
+
+  tasks.forEach(function(t) {
+    const goal = t.goalId ? GOALS.find(function(g) { return g.id === t.goalId; }) : null;
+    const item = document.createElement("div");
+    item.className = "prev-task-item";
+    item.innerHTML =
+      '<div class="prev-task-item-name">' + escapeHtml(t.name) + '</div>' +
+      (goal ? '<div class="prev-task-item-goal">' + (goal.type === "HG" ? "Goal" : goal.type) + ': ' + escapeHtml(goal.outcome.length > 45 ? goal.outcome.substring(0, 45) + '…' : goal.outcome) + '</div>' : '') +
+      (t.notes ? '<div class="prev-task-item-notes">' + escapeHtml(t.notes.length > 80 ? t.notes.substring(0, 80) + '…' : t.notes) + '</div>' : '');
+    item.onclick = function() { addTaskRow(containerId, t); picker.remove(); };
+    picker.appendChild(item);
+  });
+
+  document.body.appendChild(picker);
+  const rect = btn.getBoundingClientRect();
+  picker.style.top = (rect.bottom + window.scrollY + 6) + "px";
+  picker.style.left = Math.min(rect.left, window.innerWidth - 320) + "px";
+
+  setTimeout(function() {
+    document.addEventListener("click", function closePicker(e) {
+      if (!picker.contains(e.target) && e.target !== btn) { picker.remove(); document.removeEventListener("click", closePicker); }
+    });
+  }, 50);
+}
+
 function renderTaskInputs(containerId, tasks) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -218,13 +258,6 @@ function addTaskRow(containerId, task) {
   if (!container) return;
   const row = document.createElement("div");
   row.className = "task-row";
-
-  const listId = "prevTasks_" + containerId;
-  let dl = document.getElementById(listId);
-  if (!dl) { dl = document.createElement("datalist"); dl.id = listId; document.body.appendChild(dl); }
-  const prevMap = getPrevTaskMap();
-  dl.innerHTML = Object.values(prevMap).map(function(t) { return '<option value="' + escapeHtml(t.name) + '">'; }).join("");
-
   const goalOpts = '<option value="">— No goal linked —</option>' +
     GOALS.map(function(g) {
       const sel = task && task.goalId === g.id ? " selected" : "";
@@ -232,22 +265,12 @@ function addTaskRow(containerId, task) {
     }).join("");
   row.innerHTML =
     '<div class="task-row-top">' +
-      '<input type="text" class="task-name-input" list="' + listId + '" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
+      '<input type="text" class="task-name-input" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
       '<select class="task-goal-select">' + goalOpts + '</select>' +
       '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>' +
     '</div>' +
     '<textarea class="task-notes-input" placeholder="Staff notes for this specific task (optional)...">' + (task && task.notes ? escapeHtml(task.notes) : "") + '</textarea>';
   container.appendChild(row);
-
-  row.querySelector(".task-name-input").addEventListener("change", function() {
-    const match = prevMap[this.value.trim().toLowerCase()];
-    if (!match) return;
-    const sel = row.querySelector(".task-goal-select");
-    if (match.goalId) sel.value = String(match.goalId);
-    const notesEl = row.querySelector(".task-notes-input");
-    if (notesEl && !notesEl.value.trim() && match.notes) notesEl.value = match.notes;
-  });
-
   row.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 

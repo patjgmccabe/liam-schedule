@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -112,7 +112,10 @@
         <div class="task-section">
           <div class="task-section-header">
             <label>Tasks for This Activity</label>
-            <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('taskList')">+ Add Task</button>
+            <div style="display:flex;gap:0.4rem;">
+              <button type="button" class="btn-recent-tasks" onclick="showPrevTaskPicker(this,'taskList')">&#128337; Recent</button>
+              <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('taskList')">+ Add Task</button>
+            </div>
           </div>
           <div id="taskList" class="task-list"></div>
         </div>
@@ -241,7 +244,10 @@
           <div class="task-section" style="margin-top:0;">
             <div class="task-section-header">
               <label>Tasks for This Activity</label>
-              <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('editTaskList')">+ Add Task</button>
+              <div style="display:flex;gap:0.4rem;">
+                <button type="button" class="btn-recent-tasks" onclick="showPrevTaskPicker(this,'editTaskList')">&#128337; Recent</button>
+                <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('editTaskList')">+ Add Task</button>
+              </div>
             </div>
             <div id="editTaskList" class="task-list"></div>
           </div>
@@ -274,6 +280,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

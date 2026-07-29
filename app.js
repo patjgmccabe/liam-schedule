@@ -15,6 +15,11 @@ const firebaseConfig = {
 const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
+const WORKSHEETS = [
+  { id: "go-find-ask", label: "Go Find & Ask", url: "go-find-ask-worksheet.pdf" },
+  { id: "pizza-steps", label: "How to Make a Pizza", url: "pizza-steps.html" }
+];
+function getWorksheet(id) { return WORKSHEETS.find(function(w) { return w.id === id; }) || null; }
 
 const GOALS = [
   { id: 1, type: "HG", outcome: "To be more independent", goal: "Teach skills for independent living skills and activities of daily living skills", method: "Staff will provide verbal prompting (or visual) to take a bath, turning on the tub and to wash each body part, put the soap on and \"scrub scrub\". Provide reminders to hang up book bag, put on shoes and socks and when taking off to put in a designated area." },
@@ -223,7 +228,7 @@ function syncTaskLibrary() {
       if (!task.name || !task.name.trim()) return;
       const key = task.name.trim().toLowerCase();
       if (!lib[key] || entry.date > (lib[key].lastDate || "")) {
-        lib[key] = { name: task.name.trim(), goalId: task.goalId || null, notes: task.notes || "", lastDate: entry.date };
+        lib[key] = { name: task.name.trim(), goalId: task.goalId || null, notes: task.notes || "", lastDate: entry.date, worksheetId: task.worksheetId || null };
       }
     });
   });
@@ -332,11 +337,19 @@ function addTaskRow(containerId, task) {
       const sel = task && task.goalId === g.id ? " selected" : "";
       return '<option value="' + g.id + '"' + sel + '>[' + (g.type === "HG" ? "Goal" : g.type) + '] ' + g.outcome + '</option>';
     }).join("");
+  const wsOpts = '<option value="">&#128438; No worksheet</option>' +
+    WORKSHEETS.map(function(w) {
+      const sel = task && task.worksheetId === w.id ? " selected" : "";
+      return '<option value="' + w.id + '"' + sel + '>' + w.label + '</option>';
+    }).join("");
   row.innerHTML =
     '<div class="task-row-top">' +
       '<input type="text" class="task-name-input" placeholder="Describe the task..." value="' + (task ? escapeHtml(task.name) : "") + '">' +
       '<select class="task-goal-select">' + goalOpts + '</select>' +
       '<button type="button" class="task-remove-btn" onclick="this.closest(\'.task-row\').remove()">&#x2715;</button>' +
+    '</div>' +
+    '<div class="task-row-ws">' +
+      '<select class="task-worksheet-select">' + wsOpts + '</select>' +
     '</div>' +
     '<textarea class="task-notes-input" placeholder="Staff notes for this specific task (optional)...">' + (task && task.notes ? escapeHtml(task.notes) : "") + '</textarea>';
   container.appendChild(row);
@@ -352,7 +365,9 @@ function getTasksFromContainer(containerId) {
     const goalId = parseInt(row.querySelector(".task-goal-select").value) || null;
     const notesEl = row.querySelector(".task-notes-input");
     const notes = notesEl ? notesEl.value.trim() : "";
-    if (name) tasks.push({ name: name, goalId: goalId, notes: notes || null });
+    const wsEl = row.querySelector(".task-worksheet-select");
+    const worksheetId = wsEl ? (wsEl.value || null) : null;
+    if (name) tasks.push({ name: name, goalId: goalId, notes: notes || null, worksheetId: worksheetId });
   });
   return tasks;
 }
@@ -514,12 +529,16 @@ function viewEntry(id) {
       entryTasks.map(function(task, i) {
         const goal = task.goalId ? GOALS.find(function(g) { return g.id === task.goalId; }) : null;
         const hasNotes = task.notes && task.notes.trim();
+        const ws = task.worksheetId ? getWorksheet(task.worksheetId) : null;
         return '<div class="view-task-card' + (goal ? ' view-goal-' + goal.type.toLowerCase() : '') + '">' +
-          '<label class="view-task-check-label" for="vtc-' + i + '">' +
-            '<input type="checkbox" id="vtc-' + i + '" class="view-task-check">' +
-            '<span class="view-task-check-box">&#10003;</span>' +
-            '<span class="view-task-name">' + escapeHtml(task.name) + '</span>' +
-          '</label>' +
+          '<div class="view-task-top-row">' +
+            '<label class="view-task-check-label" for="vtc-' + i + '">' +
+              '<input type="checkbox" id="vtc-' + i + '" class="view-task-check">' +
+              '<span class="view-task-check-box">&#10003;</span>' +
+              '<span class="view-task-name">' + escapeHtml(task.name) + '</span>' +
+            '</label>' +
+            (ws ? '<a href="' + ws.url + '" target="_blank" class="task-ws-badge">&#128438; ' + ws.label + '</a>' : '') +
+          '</div>' +
           (hasNotes ?
             '<p class="view-goal-label" style="margin-top:0.85rem;">Staff Notes</p>' +
             '<p class="view-goal-text view-task-notes-text">' + escapeHtml(task.notes).replace(/\n/g, "<br>") + '</p>'

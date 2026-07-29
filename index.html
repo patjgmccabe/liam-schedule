@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
   <script>if(localStorage.getItem('liamScheduleAuth'))document.documentElement.classList.add('logged-in');</script>
 </head>
 <body>
@@ -115,7 +115,6 @@
           <div class="task-section-header">
             <label>Tasks for This Activity</label>
             <div style="display:flex;gap:0.4rem;align-items:center;">
-              <a href="go-find-ask-worksheet.pdf" target="_blank" class="btn-worksheet-hint" title="Print Go Find &amp; Ask worksheet">&#128438; Worksheet</a>
               <button type="button" class="btn-recent-tasks" onclick="showPrevTaskPicker(this,'taskList')">&#128337; Recent</button>
               <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('taskList')">+ Add Task</button>
             </div>
@@ -248,7 +247,6 @@
             <div class="task-section-header">
               <label>Tasks for This Activity</label>
               <div style="display:flex;gap:0.4rem;align-items:center;">
-                <a href="go-find-ask-worksheet.pdf" target="_blank" class="btn-worksheet-hint" title="Print Go Find &amp; Ask worksheet">&#128438; Worksheet</a>
                 <button type="button" class="btn-recent-tasks" onclick="showPrevTaskPicker(this,'editTaskList')">&#128337; Recent</button>
                 <button type="button" class="btn btn-outline btn-add-task" onclick="addTaskRow('editTaskList')">+ Add Task</button>
               </div>
@@ -284,6 +282,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

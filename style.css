@@ -397,4 +397,4 @@ tbody tr.past-date td { background: #fafafa; }
 /* Pre-auth flash prevention */
 html.logged-in #signinWidget { display: none !important; }
 html.logged-in #mainContent { display: block !important; }
-html.logged-in #navLinks { display: block !important; }
+html.logged-in #navLinks { display: flex !important; }

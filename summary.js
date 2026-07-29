@@ -176,7 +176,8 @@ function renderSummary() {
     html += '<td style="white-space:nowrap; font-weight:600;">' + formatWeekRange(week.monday) + '</td>';
     PARTICIPANTS.forEach(p => {
       const hrs = week.participants[p] || 0; weekTotal += hrs; weekTotals[p] += hrs;
-      html += '<td>' + (hrs > 0 ? hrs : '\u2013') + '</td>';
+      const hrsRounded = Math.round(hrs * 100) / 100;
+      html += '<td>' + (hrsRounded > 0 ? hrsRounded : '\u2013') + '</td>';
     });
     html += '<td class="week-total">' + (Math.round(weekTotal * 100) / 100) + '</td>';
     const hasEntries = week.entryIds && week.entryIds.length > 0;

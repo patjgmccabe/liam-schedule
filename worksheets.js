@@ -10,8 +10,7 @@ const firebaseConfig = {
 
 function preloadAuthState() {
   try {
-    const key = 'firebase:authUser:' + firebaseConfig.apiKey + ':[DEFAULT]';
-    if (localStorage.getItem(key)) {
+    if (localStorage.getItem("liamScheduleAuth")) {
       const mainContent = document.getElementById("mainContent");
       const signinWidget = document.getElementById("signinWidget");
       const navLinks = document.getElementById("navLinks");
@@ -31,12 +30,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const signinWidget = document.getElementById("signinWidget");
     const navLinks = document.getElementById("navLinks");
     if (user) {
+      localStorage.setItem("liamScheduleAuth", "1");
       const name = user.displayName || user.email.split("@")[0];
       navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="firebase.auth().signOut()">Sign Out</button>';
       mainContent.style.display = "block";
       signinWidget.style.display = "none";
       navLinks.style.display = "";
     } else {
+      localStorage.removeItem("liamScheduleAuth");
       navUser.innerHTML = "";
       mainContent.style.display = "none";
       signinWidget.style.display = "flex";

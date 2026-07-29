@@ -25,8 +25,7 @@ let authReady = false;
 /* ===== Pre-auth: hide sign-in widget immediately if session is cached ===== */
 function preloadAuthState() {
   try {
-    const key = 'firebase:authUser:' + firebaseConfig.apiKey + ':[DEFAULT]';
-    if (localStorage.getItem(key)) {
+    if (localStorage.getItem("liamScheduleAuth")) {
       const mainContent = document.getElementById("mainContent");
       const signinWidget = document.getElementById("signinWidget");
       const navLinks = document.getElementById("navLinks");
@@ -69,12 +68,14 @@ function updateAuthUI() {
   const signinWidget = document.getElementById("signinWidget");
   const navLinks = document.getElementById("navLinks");
   if (currentUser) {
+    localStorage.setItem("liamScheduleAuth", "1");
     const name = currentUser.displayName || currentUser.email.split("@")[0];
     navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="logoutUser()">Sign Out</button>';
     if (mainContent) mainContent.style.display = "block";
     if (signinWidget) signinWidget.style.display = "none";
     if (navLinks) navLinks.style.display = "";
   } else {
+    localStorage.removeItem("liamScheduleAuth");
     navUser.innerHTML = "";
     if (mainContent) mainContent.style.display = "none";
     if (signinWidget) signinWidget.style.display = "flex";

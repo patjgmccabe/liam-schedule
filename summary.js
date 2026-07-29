@@ -69,6 +69,7 @@ function updateAuthUI() {
   const navLinks = document.getElementById("navLinks");
   if (currentUser) {
     localStorage.setItem("liamScheduleAuth", "1");
+    document.documentElement.classList.add("logged-in");
     const name = currentUser.displayName || currentUser.email.split("@")[0];
     navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="logoutUser()">Sign Out</button>';
     if (mainContent) mainContent.style.display = "block";
@@ -76,6 +77,7 @@ function updateAuthUI() {
     if (navLinks) navLinks.style.display = "";
   } else {
     localStorage.removeItem("liamScheduleAuth");
+    document.documentElement.classList.remove("logged-in");
     navUser.innerHTML = "";
     if (mainContent) mainContent.style.display = "none";
     if (signinWidget) signinWidget.style.display = "flex";

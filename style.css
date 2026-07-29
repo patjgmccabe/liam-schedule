@@ -393,3 +393,8 @@ tbody tr.past-date td { background: #fafafa; }
   .navbar { flex-direction: row; }
   .navbar h1 .logo-icon { display: none; }
 }
+
+/* Pre-auth flash prevention */
+html.logged-in #signinWidget { display: none !important; }
+html.logged-in #mainContent { display: block !important; }
+html.logged-in #navLinks { display: block !important; }

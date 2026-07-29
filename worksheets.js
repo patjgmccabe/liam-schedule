@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const navLinks = document.getElementById("navLinks");
     if (user) {
       localStorage.setItem("liamScheduleAuth", "1");
+      document.documentElement.classList.add("logged-in");
       const name = user.displayName || user.email.split("@")[0];
       navUser.innerHTML = '<span class="nav-user-name">&#128100; ' + name + '</span><button class="btn-logout" onclick="firebase.auth().signOut()">Sign Out</button>';
       mainContent.style.display = "block";
@@ -38,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
       navLinks.style.display = "";
     } else {
       localStorage.removeItem("liamScheduleAuth");
+      document.documentElement.classList.remove("logged-in");
       navUser.innerHTML = "";
       mainContent.style.display = "none";
       signinWidget.style.display = "flex";

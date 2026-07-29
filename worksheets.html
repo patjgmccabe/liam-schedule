@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weekly Summary — Liam's Schedule</title>
+  <title>Worksheets — Liam's Schedule</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -16,8 +16,8 @@
       <h1><span class="logo-icon">&#9201;</span> Liam's Schedule</h1>
       <nav id="navLinks" style="display:none;">
         <a href="index.html">Schedule</a>
-        <a href="summary.html" class="active">Weekly Summary</a>
-        <a href="worksheets.html">Worksheets</a>
+        <a href="summary.html">Weekly Summary</a>
+        <a href="worksheets.html" class="active">Worksheets</a>
       </nav>
     </div>
     <div class="navbar-right" id="navUser">
@@ -50,39 +50,20 @@
 
   <div class="container" id="mainContent" style="display:none;">
 
-    <!-- Summary Card -->
     <div class="card">
       <div class="card-header">
-        <h2>Weekly Hours by Participant</h2>
+        <h2>Worksheets</h2>
       </div>
-      <div class="table-wrapper">
-        <table class="summary-table" id="summaryTable">
-          <thead>
-            <tr>
-              <th>Week</th>
-              <th>Brendan</th>
-              <th>Caleigh</th>
-              <th>Shannon</th>
-              <th>Kelly</th>
-              <th>Aidan</th>
-              <th>Week Total</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="summaryBody">
-            <tr><td colspan="8" class="empty-state"><p>Loading summary...</p></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+      <div class="worksheet-list">
 
-    <!-- Individual Totals Card -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Overall Totals <span style="font-size:0.78rem;font-weight:500;color:var(--text-secondary);">since July 1, 2026</span></h2>
-      </div>
-      <div id="totalsGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:1rem;">
-        <!-- Filled by JS -->
+        <div class="worksheet-item">
+          <div class="worksheet-info">
+            <span class="worksheet-name">Go Find &amp; Ask</span>
+            <span class="worksheet-desc">Customizable activity worksheet — Autism Parenting Center</span>
+          </div>
+          <a href="go-find-ask-worksheet.pdf" target="_blank" class="btn-print-worksheet">&#128438; Print</a>
+        </div>
+
       </div>
     </div>
 
@@ -95,6 +76,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="summary.js?v=4"></script>
+  <script src="worksheets.js?v=1"></script>
 </body>
 </html>

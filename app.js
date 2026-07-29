@@ -50,8 +50,24 @@ const SEED_DATA = [
   { date: "2025-05-17", day: "Saturday", startTime: "11:30 AM", endTime: "12:30 PM", description: "Field T4", location: "55 Otsego Avenue Dix Hills", claimedBy: "", hours: 1, goals: [] },
 ];
 
+/* ===== Pre-auth: hide sign-in widget immediately if session is cached ===== */
+function preloadAuthState() {
+  try {
+    const key = 'firebase:authUser:' + firebaseConfig.apiKey + ':[DEFAULT]';
+    if (localStorage.getItem(key)) {
+      const mainContent = document.getElementById("mainContent");
+      const signinWidget = document.getElementById("signinWidget");
+      const navLinks = document.getElementById("navLinks");
+      if (mainContent) mainContent.style.display = "block";
+      if (signinWidget) signinWidget.style.display = "none";
+      if (navLinks) navLinks.style.display = "";
+    }
+  } catch(e) {}
+}
+
 /* ===== Initialize ===== */
 document.addEventListener("DOMContentLoaded", () => {
+  preloadAuthState();
   initTimePickers();
   initDatePicker();
   initEditTimePickers();

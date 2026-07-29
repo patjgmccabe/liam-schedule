@@ -8,7 +8,22 @@ const firebaseConfig = {
   appId: "1:300732041208:web:70de624e17ca61a7ed380d"
 };
 
+function preloadAuthState() {
+  try {
+    const key = 'firebase:authUser:' + firebaseConfig.apiKey + ':[DEFAULT]';
+    if (localStorage.getItem(key)) {
+      const mainContent = document.getElementById("mainContent");
+      const signinWidget = document.getElementById("signinWidget");
+      const navLinks = document.getElementById("navLinks");
+      if (mainContent) mainContent.style.display = "block";
+      if (signinWidget) signinWidget.style.display = "none";
+      if (navLinks) navLinks.style.display = "";
+    }
+  } catch(e) {}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  preloadAuthState();
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   firebase.auth().onAuthStateChanged((user) => {
     const navUser = document.getElementById("navUser");

@@ -22,8 +22,24 @@ let allEntries = {};
 let currentUser = null;
 let authReady = false;
 
+/* ===== Pre-auth: hide sign-in widget immediately if session is cached ===== */
+function preloadAuthState() {
+  try {
+    const key = 'firebase:authUser:' + firebaseConfig.apiKey + ':[DEFAULT]';
+    if (localStorage.getItem(key)) {
+      const mainContent = document.getElementById("mainContent");
+      const signinWidget = document.getElementById("signinWidget");
+      const navLinks = document.getElementById("navLinks");
+      if (mainContent) mainContent.style.display = "block";
+      if (signinWidget) signinWidget.style.display = "none";
+      if (navLinks) navLinks.style.display = "";
+    }
+  } catch(e) {}
+}
+
 /* ===== Initialize ===== */
 document.addEventListener("DOMContentLoaded", () => {
+  preloadAuthState();
   initFirebase();
 });
 

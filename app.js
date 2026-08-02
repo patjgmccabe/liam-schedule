@@ -12,7 +12,7 @@ const firebaseConfig = {
 };
 
 /* ===== Constants ===== */
-const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
+const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan", "Mrs Smith"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
 const WORKSHEETS = [

@@ -11,8 +11,8 @@ const firebaseConfig = {
   appId: "1:300732041208:web:70de624e17ca61a7ed380d"
 };
 
-const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan"];
-const COLORS = ["#2dd4a8", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b"];
+const PARTICIPANTS = ["Brendan", "Caleigh", "Shannon", "Kelly", "Aidan", "Mrs Smith"];
+const COLORS = ["#2dd4a8", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", "#3b82f6"];
 const ADMIN_EMAIL = "patjg.mccabe@gmail.com";
 
 let db = null;
